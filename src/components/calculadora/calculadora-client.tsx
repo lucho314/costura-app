@@ -1,15 +1,17 @@
 'use client'
 
-import { useState, useTransition, useCallback } from 'react'
+import { useCallback, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { saveProducto } from '@/lib/actions/productos'
-import type { Material, CalcItem } from '@/types'
+import type { CalcItem, Material } from '@/types'
 import Toast from '@/components/ui/toast'
 
 interface ToastState {
   message: string
   type: 'success' | 'error'
 }
+
+const MAX_FILES = 6
 
 function fmoney(n: number) {
   return '$ ' + n.toLocaleString('es-AR', {
@@ -22,6 +24,8 @@ export default function CalculadoraClient({ materiales }: { materiales: Material
   const router = useRouter()
   const [items, setItems] = useState<CalcItem[]>([{ materialId: '', cantidad: 1 }])
   const [nombre, setNombre] = useState('')
+  const [fotos, setFotos] = useState<File[]>([])
+  const [photoInputKey, setPhotoInputKey] = useState(0)
   const [horasMO, setHorasMO] = useState(0)
   const [valorHora, setValorHora] = useState(0)
   const [gastosGen, setGastosGen] = useState(0)
@@ -30,7 +34,6 @@ export default function CalculadoraClient({ materiales }: { materiales: Material
   const [saveError, setSaveError] = useState('')
   const [isPending, startTransition] = useTransition()
 
-  // Calculations
   const costoMateriales = items.reduce((sum, item) => {
     if (item.materialId === '') return sum
     const mat = materiales.find(m => m.id === item.materialId)
@@ -59,9 +62,12 @@ export default function CalculadoraClient({ materiales }: { materiales: Material
   }
 
   function handleReset() {
-    if (!confirm('¿Limpiar la calculadora?')) return
+    if (!confirm('¿Limpiar el formulario del producto?')) return
+
     setItems([{ materialId: '', cantidad: 1 }])
     setNombre('')
+    setFotos([])
+    setPhotoInputKey(prev => prev + 1)
     setHorasMO(0)
     setValorHora(0)
     setGastosGen(0)
@@ -69,8 +75,45 @@ export default function CalculadoraClient({ materiales }: { materiales: Material
     setSaveError('')
   }
 
+  function handlePhotoSelection(fileList: FileList | null) {
+    if (!fileList) {
+      return
+    }
+
+    setSaveError('')
+
+    const selected = Array.from(fileList).filter(file => file.type.startsWith('image/'))
+
+    setFotos(prev => {
+      const existingKeys = new Set(prev.map(file => `${file.name}-${file.size}-${file.lastModified}`))
+      const next = [...prev]
+
+      for (const file of selected) {
+        const key = `${file.name}-${file.size}-${file.lastModified}`
+        if (existingKeys.has(key)) continue
+        if (next.length >= MAX_FILES) break
+
+        existingKeys.add(key)
+        next.push(file)
+      }
+
+      if (next.length === MAX_FILES && prev.length + selected.length > MAX_FILES) {
+        setSaveError(`Solo podes cargar hasta ${MAX_FILES} imagenes.`)
+      }
+
+      return next
+    })
+
+    setPhotoInputKey(prev => prev + 1)
+  }
+
+  function removePhoto(index: number) {
+    setFotos(prev => prev.filter((_, currentIndex) => currentIndex !== index))
+  }
+
   function handleSave() {
     setSaveError('')
+
     startTransition(async () => {
       const res = await saveProducto({
         nombre,
@@ -80,44 +123,111 @@ export default function CalculadoraClient({ materiales }: { materiales: Material
         gastos_generales: gastosGen,
         margen,
       })
+
       if (res?.error) {
         setSaveError(res.error)
-      } else {
-        setToast({ message: '¡Producto guardado en stock!', type: 'success' })
-        setTimeout(() => router.push(`/productos/${res.id}`), 1500)
+        return
       }
+
+      if (fotos.length > 0) {
+        const formData = new FormData()
+
+        fotos.forEach(file => {
+          formData.append('files', file)
+        })
+
+        const uploadResponse = await fetch(`/api/productos/${res.id}/imagenes`, {
+          method: 'POST',
+          body: formData,
+        })
+
+        const uploadResult = await uploadResponse.json()
+
+        if (!uploadResponse.ok) {
+          setToast({ message: 'Producto guardado, pero hubo un problema subiendo las fotos.', type: 'error' })
+          setSaveError(uploadResult.error ?? 'No se pudieron subir las fotos.')
+          setTimeout(() => router.push(`/productos/${res.id}`), 2200)
+          return
+        }
+      }
+
+      setToast({
+        message: fotos.length > 0
+          ? `Producto guardado con ${fotos.length} foto${fotos.length !== 1 ? 's' : ''}.`
+          : 'Producto guardado en stock.',
+        type: 'success',
+      })
+
+      setTimeout(() => router.push(`/productos/${res.id}`), 1500)
     })
   }
 
   const clearToast = useCallback(() => setToast(null), [])
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-      {/* Left — Form */}
-      <div className="lg:col-span-2 flex flex-col gap-5">
-
-        {/* Product name */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-          <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-            ✂️ Nombre del producto
-          </h3>
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="flex flex-col gap-5 lg:col-span-2">
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <h3 className="mb-3 font-bold text-gray-800">Nombre del producto</h3>
           <input
             type="text"
-            placeholder="Ej: Pantalón de algodón"
+            placeholder="Ej: Pantalon de algodon"
             value={nombre}
             onChange={e => setNombre(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-400"
+            className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-300"
           />
         </div>
 
-        {/* Materials */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-bold text-gray-800 flex items-center gap-2">📦 Materiales usados</h3>
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <div>
+              <h3 className="font-bold text-gray-800">Fotos del producto</h3>
+              <p className="text-sm text-gray-500">Podes subir hasta 6 imagenes para ver luego en stock como slider.</p>
+            </div>
+            <span className="rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700">
+              {fotos.length}/{MAX_FILES}
+            </span>
+          </div>
+
+          <input
+            key={photoInputKey}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={e => handlePhotoSelection(e.target.files)}
+            className="block w-full text-sm text-gray-500 file:mr-4 file:rounded-xl file:border-0 file:bg-violet-50 file:px-4 file:py-2 file:font-semibold file:text-violet-700 hover:file:bg-violet-100"
+          />
+
+          {fotos.length > 0 && (
+            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {fotos.map((file, index) => (
+                <div
+                  key={`${file.name}-${file.lastModified}`}
+                  className="flex items-start justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-gray-800">{file.name}</p>
+                    <p className="text-xs text-gray-500">{Math.round(file.size / 1024)} KB</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(index)}
+                    className="shrink-0 text-xs font-semibold text-red-500 transition hover:text-red-700"
+                  >
+                    Quitar
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="font-bold text-gray-800">Materiales usados</h3>
             <button
               onClick={addItem}
-              className="flex items-center gap-1 text-sm text-violet-600 hover:text-violet-700 font-semibold border border-violet-200 hover:border-violet-400 px-3 py-1.5 rounded-lg transition-all"
+              className="rounded-lg border border-violet-200 px-3 py-1.5 text-sm font-semibold text-violet-600 transition-all hover:border-violet-400 hover:text-violet-700"
             >
               + Agregar
             </button>
@@ -126,33 +236,34 @@ export default function CalculadoraClient({ materiales }: { materiales: Material
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs uppercase text-gray-400 border-b border-gray-100">
-                  <th className="text-left pb-2 pr-2">Material</th>
-                  <th className="text-right pb-2 px-2 w-36">Cantidad</th>
-                  <th className="text-right pb-2 px-2 w-28 hidden sm:table-cell">Precio unit.</th>
-                  <th className="text-right pb-2 px-2 w-28">Subtotal</th>
+                <tr className="border-b border-gray-100 text-xs uppercase text-gray-400">
+                  <th className="pb-2 pr-2 text-left">Material</th>
+                  <th className="w-36 px-2 pb-2 text-right">Cantidad</th>
+                  <th className="hidden w-28 px-2 pb-2 text-right sm:table-cell">Precio unit.</th>
+                  <th className="w-28 px-2 pb-2 text-right">Subtotal</th>
                   <th className="w-8 pb-2"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {items.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="text-center py-8 text-gray-300 text-sm">
-                      No hay materiales. Hacé clic en "+ Agregar".
+                    <td colSpan={5} className="py-8 text-center text-sm text-gray-300">
+                      No hay materiales. Hace clic en &quot;+ Agregar&quot;.
                     </td>
                   </tr>
                 ) : items.map((item, i) => {
                   const mat = materiales.find(m => m.id === item.materialId)
                   const subtotal = mat ? mat.precio * item.cantidad : 0
+
                   return (
                     <tr key={i}>
                       <td className="py-2 pr-2">
                         <select
                           value={item.materialId}
-                          onChange={e => updateItemMaterial(i, e.target.value === '' ? '' : parseInt(e.target.value))}
-                          className="w-full border border-gray-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-200 bg-white min-w-32"
+                          onChange={e => updateItemMaterial(i, e.target.value === '' ? '' : Number.parseInt(e.target.value, 10))}
+                          className="min-w-32 w-full rounded-lg border border-gray-200 bg-white px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-200"
                         >
-                          <option value="">— elegir —</option>
+                          <option value="">- elegir -</option>
                           {materiales.map(m => (
                             <option key={m.id} value={m.id}>
                               {m.nombre} ({m.unidad})
@@ -160,35 +271,35 @@ export default function CalculadoraClient({ materiales }: { materiales: Material
                           ))}
                         </select>
                       </td>
-                      <td className="py-2 px-2 w-36">
-                        <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-violet-200">
+                      <td className="w-36 px-2 py-2">
+                        <div className="flex items-center overflow-hidden rounded-lg border border-gray-200 focus-within:ring-2 focus-within:ring-violet-200">
                           <input
                             type="number"
                             value={item.cantidad || ''}
                             min="0"
                             step="0.01"
-                            onChange={e => updateItemCantidad(i, parseFloat(e.target.value) || 0)}
-                            className="flex-1 px-2 py-2 text-sm text-right focus:outline-none min-w-0 w-16"
+                            onChange={e => updateItemCantidad(i, Number.parseFloat(e.target.value) || 0)}
+                            className="min-w-0 w-16 flex-1 px-2 py-2 text-right text-sm focus:outline-none"
                           />
                           {mat && (
-                            <span className="px-2 text-xs text-gray-400 font-mono bg-gray-50 border-l border-gray-200 py-2 shrink-0">
+                            <span className="shrink-0 border-l border-gray-200 bg-gray-50 px-2 py-2 font-mono text-xs text-gray-400">
                               {mat.unidad}
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="py-2 px-2 text-right font-mono text-xs text-gray-400 hidden sm:table-cell">
-                        {mat ? fmoney(mat.precio) : '—'}
+                      <td className="hidden px-2 py-2 text-right font-mono text-xs text-gray-400 sm:table-cell">
+                        {mat ? fmoney(mat.precio) : '-'}
                       </td>
-                      <td className="py-2 px-2 text-right font-mono font-semibold text-sm text-gray-900">
-                        {subtotal > 0 ? fmoney(subtotal) : '—'}
+                      <td className="px-2 py-2 text-right font-mono text-sm font-semibold text-gray-900">
+                        {subtotal > 0 ? fmoney(subtotal) : '-'}
                       </td>
                       <td className="py-2 pl-2">
                         <button
                           onClick={() => removeItem(i)}
-                          className="text-gray-300 hover:text-red-500 transition-colors font-bold"
+                          className="font-bold text-gray-300 transition-colors hover:text-red-500"
                         >
-                          ✕
+                          ×
                         </button>
                       </td>
                     </tr>
@@ -198,100 +309,97 @@ export default function CalculadoraClient({ materiales }: { materiales: Material
             </table>
           </div>
 
-          <div className="flex justify-end mt-3 pt-3 border-t border-gray-100">
+          <div className="mt-3 flex justify-end border-t border-gray-100 pt-3">
             <div className="text-right">
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Total materiales</p>
+              <p className="text-xs uppercase tracking-wide text-gray-400">Total materiales</p>
               <p className="text-2xl font-bold text-gray-900">{fmoney(costoMateriales)}</p>
             </div>
           </div>
         </div>
 
-        {/* Additional costs */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-          <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">⚙️ Costos adicionales</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <h3 className="mb-4 font-bold text-gray-800">Costos adicionales</h3>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Horas de mano de obra</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Horas de mano de obra</label>
               <input
                 type="number"
                 value={horasMO || ''}
                 min="0"
                 step="0.5"
                 placeholder="0"
-                onChange={e => setHorasMO(parseFloat(e.target.value) || 0)}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300"
+                onChange={e => setHorasMO(Number.parseFloat(e.target.value) || 0)}
+                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Valor por hora ($)</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Valor por hora ($)</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">$</span>
                 <input
                   type="number"
                   value={valorHora || ''}
                   min="0"
                   placeholder="0"
-                  onChange={e => setValorHora(parseFloat(e.target.value) || 0)}
-                  className="w-full border border-gray-200 rounded-xl pl-7 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300"
+                  onChange={e => setValorHora(Number.parseFloat(e.target.value) || 0)}
+                  className="w-full rounded-xl border border-gray-200 py-2.5 pl-7 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300"
                 />
               </div>
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Gastos generales (monto fijo)</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Gastos generales (monto fijo)</label>
               <div className="relative max-w-sm">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">$</span>
                 <input
                   type="number"
                   value={gastosGen || ''}
                   min="0"
                   placeholder="0"
-                  onChange={e => setGastosGen(parseFloat(e.target.value) || 0)}
-                  className="w-full border border-gray-200 rounded-xl pl-7 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300"
+                  onChange={e => setGastosGen(Number.parseFloat(e.target.value) || 0)}
+                  className="w-full rounded-xl border border-gray-200 py-2.5 pl-7 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300"
                 />
               </div>
             </div>
           </div>
-          <div className="flex justify-end mt-3 pt-3 border-t border-gray-100">
+
+          <div className="mt-3 flex justify-end border-t border-gray-100 pt-3">
             <div className="text-right">
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Total adicionales</p>
+              <p className="text-xs uppercase tracking-wide text-gray-400">Total adicionales</p>
               <p className="text-2xl font-bold text-gray-900">{fmoney(costoMO + gastosGen)}</p>
             </div>
           </div>
         </div>
 
-        {/* Margin */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-          <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">📈 Margen de ganancia</h3>
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <h3 className="mb-4 font-bold text-gray-800">Margen de ganancia</h3>
           <div className="flex items-center gap-4">
             <input
               type="range"
               min="0"
               max="200"
               value={margen}
-              onChange={e => setMargen(parseInt(e.target.value))}
+              onChange={e => setMargen(Number.parseInt(e.target.value, 10))}
               className="flex-1 accent-violet-600"
             />
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex shrink-0 items-center gap-1">
               <input
                 type="number"
                 value={margen}
                 min="0"
                 max="200"
-                onChange={e => setMargen(Math.max(0, Math.min(200, parseInt(e.target.value) || 0)))}
-                className="w-20 border border-gray-200 rounded-xl px-2 py-2 text-center font-bold text-sm focus:outline-none focus:ring-2 focus:ring-violet-300"
+                onChange={e => setMargen(Math.max(0, Math.min(200, Number.parseInt(e.target.value, 10) || 0)))}
+                className="w-20 rounded-xl border border-gray-200 px-2 py-2 text-center text-sm font-bold focus:outline-none focus:ring-2 focus:ring-violet-300"
               />
-              <span className="font-bold text-gray-500 text-lg">%</span>
+              <span className="text-lg font-bold text-gray-500">%</span>
             </div>
           </div>
-          <p className="text-xs text-gray-400 mt-2">Precio = Costo total × (1 + margen%)</p>
+          <p className="mt-2 text-xs text-gray-400">Precio = costo total x (1 + margen%)</p>
         </div>
-
       </div>
 
-      {/* Right — Summary */}
       <div>
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 lg:sticky lg:top-6">
-          <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">💰 Resumen</h3>
+        <div className="sticky top-6 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <h3 className="mb-4 font-bold text-gray-800">Resumen</h3>
 
           <div className="space-y-2 text-sm">
             {[
@@ -299,50 +407,47 @@ export default function CalculadoraClient({ materiales }: { materiales: Material
               { label: 'Mano de obra', value: fmoney(costoMO) },
               { label: 'Gastos generales', value: fmoney(gastosGen) },
             ].map(({ label, value }) => (
-              <div key={label} className="flex justify-between items-center py-2 border-b border-gray-100">
+              <div key={label} className="flex items-center justify-between border-b border-gray-100 py-2">
                 <span className="text-gray-500">{label}</span>
-                <span className="font-semibold font-mono text-gray-900">{value}</span>
+                <span className="font-mono font-semibold text-gray-900">{value}</span>
               </div>
             ))}
-            <div className="flex justify-between items-center py-2 border-b-2 border-gray-200">
+            <div className="flex items-center justify-between border-b-2 border-gray-200 py-2">
               <span className="font-bold text-gray-900">Costo total</span>
-              <span className="font-bold font-mono text-gray-900">{fmoney(costoTotal)}</span>
+              <span className="font-mono font-bold text-gray-900">{fmoney(costoTotal)}</span>
             </div>
-            <div className="flex justify-between items-center py-2">
+            <div className="flex items-center justify-between py-2">
               <span className="text-gray-500">Ganancia ({margen}%)</span>
-              <span className="font-semibold font-mono text-green-600">{fmoney(margenValor)}</span>
+              <span className="font-mono font-semibold text-green-600">{fmoney(margenValor)}</span>
             </div>
           </div>
 
-          {/* Price card */}
-          <div className="mt-5 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 p-5 text-white text-center shadow-lg">
-            <p className="text-xs uppercase tracking-widest text-white/60 mb-1">Producto</p>
-            <p className="font-semibold text-white/90 mb-3 truncate">{nombre || 'Mi producto'}</p>
-            <p className="text-xs uppercase tracking-widest text-white/60 mb-1">Precio sugerido</p>
+          <div className="mt-5 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 p-5 text-center text-white shadow-lg">
+            <p className="mb-1 text-xs uppercase tracking-widest text-white/60">Producto</p>
+            <p className="mb-3 truncate font-semibold text-white/90">{nombre || 'Mi producto'}</p>
+            <p className="mb-1 text-xs uppercase tracking-widest text-white/60">Precio sugerido</p>
             <p className="text-4xl font-extrabold tracking-tight">{fmoney(precioVenta)}</p>
           </div>
 
-          {/* Save error */}
           {saveError && (
-            <div className="mt-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-3 py-2">
+            <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {saveError}
             </div>
           )}
 
-          {/* Actions */}
           <div className="mt-4 flex gap-2">
             <button
               onClick={handleReset}
-              className="flex-1 text-sm text-gray-500 hover:text-gray-700 border border-gray-200 hover:border-gray-300 rounded-xl py-2 transition-all"
+              className="flex-1 rounded-xl border border-gray-200 py-2 text-sm text-gray-500 transition-all hover:border-gray-300 hover:text-gray-700"
             >
-              🗑️ Limpiar
+              Limpiar
             </button>
             <button
               onClick={handleSave}
               disabled={isPending}
-              className="flex-1 text-sm font-semibold bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl py-2 shadow-sm transition-all disabled:opacity-60"
+              className="flex-1 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:from-violet-700 hover:to-indigo-700 disabled:opacity-60"
             >
-              {isPending ? 'Guardando...' : '💾 Guardar producto'}
+              {isPending ? 'Guardando...' : 'Guardar producto'}
             </button>
           </div>
         </div>

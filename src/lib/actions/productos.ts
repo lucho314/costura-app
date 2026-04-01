@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import type { CalcItem } from '@/types'
+import { deleteProductImage } from '@/lib/r2/server'
+import type { CalcItem, Producto, ProductoImagen } from '@/types'
 
 export interface SaveProductoInput {
   nombre: string
@@ -11,6 +12,19 @@ export interface SaveProductoInput {
   valor_hora: number
   gastos_generales: number
   margen: number
+}
+
+function sortImages(images?: ProductoImagen[] | null) {
+  return [...(images ?? [])].sort((a, b) => a.orden - b.orden)
+}
+
+function normalizeProducto<T extends Producto | null>(producto: T): T {
+  if (!producto) return producto
+
+  return {
+    ...producto,
+    producto_imagenes: sortImages(producto.producto_imagenes),
+  }
 }
 
 export async function saveProducto(input: SaveProductoInput) {
@@ -94,7 +108,19 @@ export async function getProductos(search?: string) {
 
   let query = supabase
     .from('productos')
-    .select('*')
+    .select(`
+      *,
+      producto_imagenes (
+        id,
+        producto_id,
+        user_id,
+        object_key,
+        url,
+        orden,
+        alt,
+        created_at
+      )
+    `)
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
@@ -103,7 +129,7 @@ export async function getProductos(search?: string) {
   }
 
   const { data } = await query
-  return data ?? []
+  return (data ?? []).map(producto => normalizeProducto(producto as Producto))
 }
 
 export async function getProductoDetalle(id: number) {
@@ -115,6 +141,16 @@ export async function getProductoDetalle(id: number) {
     .from('productos')
     .select(`
       *,
+      producto_imagenes (
+        id,
+        producto_id,
+        user_id,
+        object_key,
+        url,
+        orden,
+        alt,
+        created_at
+      ),
       producto_materiales (
         *,
         material:materiales ( nombre, unidad )
@@ -124,7 +160,7 @@ export async function getProductoDetalle(id: number) {
     .eq('user_id', user.id)
     .single()
 
-  return data
+  return normalizeProducto(data as Producto | null)
 }
 
 export async function updateStock(id: number, stock: number) {
@@ -148,6 +184,20 @@ export async function deleteProducto(id: number) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
+
+  const { data: imagenes } = await supabase
+    .from('producto_imagenes')
+    .select('object_key')
+    .eq('producto_id', id)
+    .eq('user_id', user.id)
+
+  await Promise.all((imagenes ?? []).map(async imagen => {
+    try {
+      await deleteProductImage(imagen.object_key)
+    } catch {
+      // Si el archivo ya no existe en R2, igual dejamos avanzar el borrado del producto.
+    }
+  }))
 
   const { error } = await supabase
     .from('productos')

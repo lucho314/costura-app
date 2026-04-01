@@ -35,6 +35,17 @@ export interface ProductoMaterial {
   material?: Material
 }
 
+export interface ProductoImagen {
+  id: number
+  producto_id: number
+  user_id: string
+  object_key: string
+  url: string
+  orden: number
+  alt: string | null
+  created_at: string
+}
+
 export interface Producto {
   id: number
   user_id: string
@@ -50,6 +61,7 @@ export interface Producto {
   stock: number
   created_at: string
   producto_materiales?: ProductoMaterial[]
+  producto_imagenes?: ProductoImagen[]
 }
 
 export interface CalcItem {

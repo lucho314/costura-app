@@ -1,22 +1,29 @@
 'use client'
 
-import { useState, useTransition, useCallback } from 'react'
-import { createMaterial, updateMaterial, deleteMaterial } from '@/lib/actions/materiales'
-import { UNIDADES } from '@/types'
-import type { Material } from '@/types'
+import { useCallback, useState, useTransition } from 'react'
 import Modal from '@/components/ui/modal'
 import Toast from '@/components/ui/toast'
+import { createMaterial, deleteMaterial, updateMaterial } from '@/lib/actions/materiales'
+import type { Material } from '@/types'
+import { UNIDADES } from '@/types'
 
-interface Toast {
+interface ToastState {
   message: string
   type: 'success' | 'error'
+}
+
+function fmoney(n: number) {
+  return '$ ' + n.toLocaleString('es-AR', {
+    minimumFractionDigits: n % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  })
 }
 
 export default function MaterialesClient({ materiales }: { materiales: Material[] }) {
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Material | null>(null)
   const [error, setError] = useState('')
-  const [toast, setToast] = useState<Toast | null>(null)
+  const [toast, setToast] = useState<ToastState | null>(null)
   const [search, setSearch] = useState('')
   const [isPending, startTransition] = useTransition()
 
@@ -65,6 +72,7 @@ export default function MaterialesClient({ materiales }: { materiales: Material[
 
   function handleDelete(m: Material) {
     if (!confirm(`¿Eliminar "${m.nombre}"?`)) return
+
     startTransition(async () => {
       const res = await deleteMaterial(m.id)
       if (res?.error) {
@@ -79,21 +87,21 @@ export default function MaterialesClient({ materiales }: { materiales: Material[
 
   return (
     <>
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h2 className="text-xl font-bold text-gray-900">Inventario de Materiales</h2>
-          <p className="text-sm text-gray-500">{materiales.length} material{materiales.length !== 1 ? 'es' : ''} registrado{materiales.length !== 1 ? 's' : ''}</p>
+          <p className="text-sm text-gray-500">
+            {materiales.length} material{materiales.length !== 1 ? 'es' : ''} registrado{materiales.length !== 1 ? 's' : ''}
+          </p>
         </div>
         <button
           onClick={openAdd}
-          className="flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-all text-sm"
+          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:from-violet-700 hover:to-indigo-700"
         >
           <span className="text-base">+</span> Agregar Material
         </button>
       </div>
 
-      {/* Search */}
       <div className="mb-4">
         <div className="relative max-w-sm">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
@@ -102,40 +110,39 @@ export default function MaterialesClient({ materiales }: { materiales: Material[
             placeholder="Buscar material..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-400"
+            className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-4 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-300"
           />
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
         {filtered.length === 0 ? (
           <div className="py-16 text-center text-gray-400">
-            <div className="text-5xl mb-3">📦</div>
+            <div className="mb-3 text-5xl">📦</div>
             <p className="font-semibold text-gray-500">
-              {search ? 'Sin resultados' : 'Sin materiales todavía'}
+              {search ? 'Sin resultados' : 'Sin materiales todavia'}
             </p>
             {!search && (
-              <p className="text-sm mt-1">Hacé clic en "Agregar Material" para empezar.</p>
+              <p className="mt-1 text-sm">Hace clic en &quot;Agregar Material&quot; para empezar.</p>
             )}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-100">
+              <thead className="border-b border-gray-100 bg-gray-50">
                 <tr>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-600">Material</th>
-                  <th className="text-left px-4 py-3 font-semibold text-gray-600">Unidad</th>
-                  <th className="text-right px-4 py-3 font-semibold text-gray-600">Precio / Unidad</th>
-                  <th className="text-center px-4 py-3 font-semibold text-gray-600">Acciones</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-600">Material</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-600">Unidad</th>
+                  <th className="px-4 py-3 text-right font-semibold text-gray-600">Precio / Unidad</th>
+                  <th className="px-4 py-3 text-center font-semibold text-gray-600">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {filtered.map(m => (
-                  <tr key={m.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={m.id} className="transition-colors hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium text-gray-900">{m.nombre}</td>
                     <td className="px-4 py-3">
-                      <span className="inline-block bg-violet-50 text-violet-700 text-xs font-mono font-semibold px-2 py-0.5 rounded-md">
+                      <span className="inline-block rounded-md bg-violet-50 px-2 py-0.5 text-xs font-mono font-semibold text-violet-700">
                         {m.unidad}
                       </span>
                     </td>
@@ -146,14 +153,14 @@ export default function MaterialesClient({ materiales }: { materiales: Material[
                       <div className="flex justify-center gap-2">
                         <button
                           onClick={() => openEdit(m)}
-                          className="text-gray-400 hover:text-violet-600 transition-colors p-1 rounded"
+                          className="rounded p-1 text-gray-400 transition-colors hover:text-violet-600"
                           title="Editar"
                         >
                           ✏️
                         </button>
                         <button
                           onClick={() => handleDelete(m)}
-                          className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded"
+                          className="rounded p-1 text-gray-400 transition-colors hover:text-red-500"
                           title="Eliminar"
                         >
                           🗑️
@@ -168,7 +175,6 @@ export default function MaterialesClient({ materiales }: { materiales: Material[
         )}
       </div>
 
-      {/* Modal */}
       <Modal
         open={modalOpen}
         onClose={closeModal}
@@ -176,27 +182,27 @@ export default function MaterialesClient({ materiales }: { materiales: Material[
       >
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="mb-1 block text-sm font-medium text-gray-700">
               Nombre <span className="text-red-500">*</span>
             </label>
             <input
               name="nombre"
               type="text"
               defaultValue={editing?.nombre ?? ''}
-              placeholder="Ej: Tela algodón"
+              placeholder="Ej: Tela algodon"
               autoFocus
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-400"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-300"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="mb-1 block text-sm font-medium text-gray-700">
               Unidad de medida <span className="text-red-500">*</span>
             </label>
             <select
               name="unidad"
               defaultValue={editing?.unidad ?? ''}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-400 bg-white"
+              className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-300"
             >
               <option value="">Seleccionar...</option>
               {UNIDADES.map(u => (
@@ -206,11 +212,11 @@ export default function MaterialesClient({ materiales }: { materiales: Material[
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="mb-1 block text-sm font-medium text-gray-700">
               Precio por unidad <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-400">$</span>
               <input
                 name="precio"
                 type="number"
@@ -218,13 +224,13 @@ export default function MaterialesClient({ materiales }: { materiales: Material[
                 min="0"
                 defaultValue={editing?.precio ?? ''}
                 placeholder="0.00"
-                className="w-full border border-gray-200 rounded-xl pl-7 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-400"
+                className="w-full rounded-xl border border-gray-200 py-2.5 pl-7 pr-3 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-300"
               />
             </div>
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-3 py-2">
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {error}
             </div>
           )}
@@ -233,14 +239,14 @@ export default function MaterialesClient({ materiales }: { materiales: Material[
             <button
               type="button"
               onClick={closeModal}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 rounded-lg transition-colors"
+              className="rounded-lg px-4 py-2 text-sm text-gray-600 transition-colors hover:text-gray-800"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="px-5 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-all disabled:opacity-60"
+              className="rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:from-violet-700 hover:to-indigo-700 disabled:opacity-60"
             >
               {isPending ? 'Guardando...' : 'Guardar'}
             </button>
@@ -251,11 +257,4 @@ export default function MaterialesClient({ materiales }: { materiales: Material[
       {toast && <Toast message={toast.message} type={toast.type} onDone={clearToast} />}
     </>
   )
-}
-
-function fmoney(n: number) {
-  return '$ ' + n.toLocaleString('es-AR', {
-    minimumFractionDigits: n % 1 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  })
 }

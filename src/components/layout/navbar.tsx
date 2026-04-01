@@ -2,12 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import type { User } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
 
 const NAV_LINKS = [
   { href: '/materiales', label: '📦 Materiales' },
-  { href: '/calculadora', label: '🧮 Calculadora' },
+  { href: '/calculadora', label: '🧮 Crear producto' },
   { href: '/productos', label: '🗂️ Stock' },
 ]
 
@@ -23,24 +23,22 @@ export default function Navbar({ user }: { user: User }) {
 
   return (
     <header className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg">
-      <div className="container mx-auto px-4 max-w-6xl">
-        <div className="flex items-center justify-between h-16">
-          {/* Brand */}
-          <Link href="/materiales" className="flex items-center gap-2 font-extrabold text-lg tracking-tight select-none">
+      <div className="container mx-auto max-w-6xl px-4">
+        <div className="flex h-16 items-center justify-between">
+          <Link href="/materiales" className="flex select-none items-center gap-2 text-lg font-extrabold tracking-tight">
             <span className="text-2xl">🧵</span>
-            <span className="hidden sm:block">Gestión de Materiales</span>
+            <span className="hidden sm:block">Gestion de Materiales</span>
           </Link>
 
-          {/* Nav links */}
           <nav className="flex items-center gap-1">
             {NAV_LINKS.map(({ href, label }) => (
               <Link
                 key={href}
                 href={href}
-                className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition-all ${
                   pathname.startsWith(href)
                     ? 'bg-white/20 text-white'
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                    : 'text-white/70 hover:bg-white/10 hover:text-white'
                 }`}
               >
                 {label}
@@ -48,15 +46,14 @@ export default function Navbar({ user }: { user: User }) {
             ))}
           </nav>
 
-          {/* User menu */}
           <div className="flex items-center gap-3">
-            <span className="hidden md:block text-sm text-white/70 truncate max-w-40">
+            <span className="hidden max-w-40 truncate text-sm text-white/70 md:block">
               {user.email}
             </span>
             <button
               onClick={handleSignOut}
-              className="text-sm text-white/70 hover:text-white transition-colors"
-              title="Cerrar sesión"
+              className="text-sm text-white/70 transition-colors hover:text-white"
+              title="Cerrar sesion"
             >
               Salir
             </button>
