@@ -25,13 +25,15 @@ export default function Navbar({ user }: { user: User }) {
   return (
     <header className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg">
       <div className="container mx-auto max-w-6xl px-4">
-        <div className="flex h-16 items-center justify-between">
+        {/* Fila 1: logo + salir */}
+        <div className="flex h-14 items-center justify-between sm:h-16">
           <Link href="/materiales" className="flex select-none items-center gap-2 text-lg font-extrabold tracking-tight">
             <span className="text-2xl">🧵</span>
             <span className="hidden sm:block">Gestion de Materiales</span>
           </Link>
 
-          <nav className="flex items-center gap-1">
+          {/* Nav inline en desktop */}
+          <nav className="hidden sm:flex items-center gap-1">
             {NAV_LINKS.map(({ href, label }) => (
               <Link
                 key={href}
@@ -60,6 +62,23 @@ export default function Navbar({ user }: { user: User }) {
             </button>
           </div>
         </div>
+
+        {/* Fila 2: nav en mobile (scroll horizontal sin scrollbar) */}
+        <nav className="flex sm:hidden items-center gap-1 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {NAV_LINKS.map(({ href, label }) => (
+            <Link
+              key={href}
+              href={href}
+              className={`shrink-0 rounded-lg px-3 py-1.5 text-sm font-semibold transition-all ${
+                pathname.startsWith(href)
+                  ? 'bg-white/20 text-white'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
       </div>
     </header>
   )

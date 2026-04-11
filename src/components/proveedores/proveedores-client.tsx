@@ -56,6 +56,14 @@ function IconLink() {
   )
 }
 
+function IconMaps() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5Z"/>
+    </svg>
+  )
+}
+
 function IconEdit() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -201,10 +209,21 @@ export default function ProveedoresClient({ proveedores }: { proveedores: Provee
           {filtered.map(proveedor => (
             <div
               key={proveedor.id}
-              className="group relative rounded-2xl border border-transparent bg-white p-5 shadow-sm transition-all hover:border-violet-200 hover:shadow-md"
+              className="relative rounded-2xl border border-transparent bg-white p-5 shadow-sm transition-all hover:border-violet-200 hover:shadow-md"
             >
               {/* Action buttons */}
-              <div className="absolute right-4 top-4 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+              <div className="absolute right-4 top-4 flex gap-1">
+                {proveedor.google_maps_url && (
+                  <a
+                    href={proveedor.google_maps_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    title="Ver en Google Maps"
+                    className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-green-50 hover:text-green-600"
+                  >
+                    <IconMaps />
+                  </a>
+                )}
                 <button
                   onClick={() => openEdit(proveedor)}
                   title="Editar"
