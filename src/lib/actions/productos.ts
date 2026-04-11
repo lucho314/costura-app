@@ -1,6 +1,7 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { refresh, revalidatePath } from 'next/cache'
+import { roundSuggestedPrice } from '@/lib/product-pricing'
 import { createClient } from '@/lib/supabase/server'
 import { deleteProductImage } from '@/lib/r2/server'
 import type { CalcItem, Producto, ProductoImagen } from '@/types'
@@ -14,11 +15,12 @@ export interface SaveProductoInput {
   margen: number
 }
 
-function roundSuggestedPrice(n: number) {
-  const hasDecimals = n % 1 !== 0
-  const step = hasDecimals ? 50 : 10
-
-  return Math.ceil(n / step) * step
+export interface UpdateProductoDetalleInput {
+  productoId: number
+  items: Array<{
+    materialId: number
+    cantidad: number
+  }>
 }
 
 function sortImages(images?: ProductoImagen[] | null) {
@@ -184,6 +186,89 @@ export async function updateStock(id: number, stock: number) {
   if (error) return { error: error.message }
   revalidatePath('/productos')
   revalidatePath(`/productos/${id}`)
+  return { success: true }
+}
+
+export async function updateProductoDetalle(input: UpdateProductoDetalleInput) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { productoId, items } = input
+  const normalizedItems = items
+    .filter(item => Number.isFinite(item.materialId) && item.materialId > 0 && Number.isFinite(item.cantidad) && item.cantidad > 0)
+
+  if (normalizedItems.length === 0) return { error: 'Agregá al menos un material.' }
+
+  const { data: producto, error: productoErr } = await supabase
+    .from('productos')
+    .select('id, user_id, horas_mo, valor_hora, gastos_generales, margen')
+    .eq('id', productoId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (productoErr || !producto) return { error: 'No se encontró el producto.' }
+
+  const materialIds = [...new Set(normalizedItems.map(item => item.materialId))]
+  const { data: materialesDB, error: materialesErr } = await supabase
+    .from('materiales')
+    .select('id, precio')
+    .in('id', materialIds)
+    .eq('user_id', user.id)
+
+  if (materialesErr || !materialesDB || materialesDB.length !== materialIds.length) {
+    return { error: 'No se pudieron obtener todos los materiales seleccionados.' }
+  }
+
+  const priceMap = new Map(materialesDB.map(material => [material.id, material.precio]))
+  const productoMateriales = normalizedItems.map(item => {
+    const precio_unitario = priceMap.get(item.materialId) ?? 0
+
+    return {
+      producto_id: productoId,
+      material_id: item.materialId,
+      cantidad: item.cantidad,
+      precio_unitario,
+      subtotal: precio_unitario * item.cantidad,
+    }
+  })
+
+  const costo_materiales = productoMateriales.reduce((sum, item) => sum + item.subtotal, 0)
+  const costo_mo = producto.horas_mo * producto.valor_hora
+  const costo_total = costo_materiales + costo_mo + producto.gastos_generales
+  const margen = producto.margen
+  const precio_venta = roundSuggestedPrice(costo_total * (1 + margen / 100))
+
+  const { error: deleteErr } = await supabase
+    .from('producto_materiales')
+    .delete()
+    .eq('producto_id', productoId)
+
+  if (deleteErr) return { error: deleteErr.message }
+
+  const { error: insertErr } = await supabase
+    .from('producto_materiales')
+    .insert(productoMateriales)
+
+  if (insertErr) return { error: insertErr.message }
+
+  const { error: updateErr } = await supabase
+    .from('productos')
+    .update({
+      costo_materiales,
+      costo_mo,
+      costo_total,
+      margen,
+      precio_venta,
+    })
+    .eq('id', productoId)
+    .eq('user_id', user.id)
+
+  if (updateErr) return { error: updateErr.message }
+
+  revalidatePath('/productos')
+  revalidatePath('/productos/[id]', 'page')
+  refresh()
   return { success: true }
 }
 

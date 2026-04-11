@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { getMateriales } from '@/lib/actions/materiales'
 import ProductoImageSlider from '@/components/productos/producto-image-slider'
+import ProductoDetailEditor from '@/components/productos/producto-detail-editor'
 import ProductoImageUploader from '@/components/productos/producto-image-uploader'
 import StockEditor from '@/components/productos/stock-editor'
 import { getProductoDetalle } from '@/lib/actions/productos'
@@ -19,7 +21,11 @@ export default async function ProductoDetallePage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const producto = await getProductoDetalle(Number.parseInt(id, 10))
+  const productoId = Number.parseInt(id, 10)
+  const [producto, materiales] = await Promise.all([
+    getProductoDetalle(productoId),
+    getMateriales(),
+  ])
 
   if (!producto) notFound()
 
@@ -61,7 +67,19 @@ export default async function ProductoDetallePage({
       </div>
 
       <div className="mb-5 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-        <h2 className="mb-4 font-bold text-gray-800">Composicion de materiales</h2>
+        <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+          <div>
+            <h2 className="font-bold text-gray-800">Composicion de materiales</h2>
+            <p className="text-sm text-gray-500">Podés editar la composición del producto y ajustar el precio de venta.</p>
+          </div>
+          <ProductoDetailEditor
+            key={`${producto.id}-${producto.precio_venta}-${pm.length}`}
+            productoId={producto.id}
+            materiales={materiales}
+            initialItems={pm}
+            margen={producto.margen}
+          />
+        </div>
         {pm.length === 0 ? (
           <p className="text-sm text-gray-400">Sin materiales registrados.</p>
         ) : (
@@ -116,9 +134,9 @@ export default async function ProductoDetallePage({
             <span className="font-mono text-gray-900">{fmoney(producto.costo_total)}</span>
           </div>
           <div className="flex items-center justify-between border-b border-gray-50 py-2">
-            <span className="text-gray-500">Ganancia ({producto.margen}%)</span>
+            <span className="text-gray-500">Ganancia actual</span>
             <span className="font-mono font-semibold text-green-600">
-              {fmoney(producto.costo_total * (producto.margen / 100))}
+              {fmoney(producto.precio_venta - producto.costo_total)}
             </span>
           </div>
           <div className="mt-2 flex items-center justify-between rounded-xl bg-violet-50 px-3 py-3">
