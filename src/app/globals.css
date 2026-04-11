@@ -7,6 +7,105 @@
   --color-indigo-primary: oklch(48% 0.22 265);
 }
 
+/* ── App shell layout ── */
+.app-layout {
+  min-height: 100vh;
+  display: block;
+  background: #f9fafb;
+}
+@media (min-width: 1024px) {
+  .app-layout {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+}
+
+/* ── Desktop sidebar ── */
+.app-sidebar {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .app-sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 224px;
+    flex-shrink: 0;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
+    background: linear-gradient(to bottom, #6d28d9, #4338ca);
+    z-index: 30;
+  }
+}
+
+/* ── Main content ── */
+.app-main {
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 3.5rem; /* mobile topbar height */
+}
+@media (min-width: 1024px) {
+  .app-main {
+    padding-top: 0;
+  }
+}
+
+/* ── Mobile topbar ── */
+.mobile-topbar {
+  display: flex;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3.5rem;
+  z-index: 40;
+  background: linear-gradient(to right, #6d28d9, #4338ca);
+  box-shadow: 0 1px 6px rgba(0,0,0,.25);
+}
+@media (min-width: 1024px) {
+  .mobile-topbar {
+    display: none;
+  }
+}
+
+/* ── Mobile drawer backdrop ── */
+.mobile-backdrop {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0,0,0,.5);
+  transition: opacity .25s;
+}
+@media (min-width: 1024px) {
+  .mobile-backdrop {
+    display: none !important;
+  }
+}
+
+/* ── Mobile drawer panel ── */
+.mobile-drawer {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 3.5rem;
+  left: 0;
+  bottom: 0;
+  width: 256px;
+  z-index: 50;
+  background: #fff;
+  box-shadow: 4px 0 24px rgba(0,0,0,.15);
+  transition: transform .3s ease;
+}
+@media (min-width: 1024px) {
+  .mobile-drawer {
+    display: none !important;
+  }
+}
+
 /* Remove number input spinners */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {

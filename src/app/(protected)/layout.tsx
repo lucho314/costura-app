@@ -12,10 +12,12 @@ export default async function ProtectedLayout({
   if (!data.user) redirect('/auth/login')
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="app-layout">
       <Navbar user={data.user} />
-      <main className="flex-1 container mx-auto px-4 py-6 max-w-6xl">
-        {children}
+      <main className="app-main">
+        <div style={{ padding: '1.5rem 1rem', maxWidth: '72rem', margin: '0 auto' }}>
+          {children}
+        </div>
       </main>
     </div>
   )
