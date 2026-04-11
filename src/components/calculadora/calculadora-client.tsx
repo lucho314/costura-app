@@ -20,6 +20,13 @@ function fmoney(n: number) {
   })
 }
 
+function roundSuggestedPrice(n: number) {
+  const hasDecimals = n % 1 !== 0
+  const step = hasDecimals ? 50 : 10
+
+  return Math.ceil(n / step) * step
+}
+
 export default function CalculadoraClient({ materiales }: { materiales: Material[] }) {
   const router = useRouter()
   const [items, setItems] = useState<CalcItem[]>([{ materialId: '', cantidad: 1 }])
@@ -42,8 +49,9 @@ export default function CalculadoraClient({ materiales }: { materiales: Material
 
   const costoMO = horasMO * valorHora
   const costoTotal = costoMateriales + costoMO + gastosGen
-  const margenValor = costoTotal * (margen / 100)
-  const precioVenta = costoTotal * (1 + margen / 100)
+  const precioVentaBase = costoTotal * (1 + margen / 100)
+  const precioVenta = roundSuggestedPrice(precioVentaBase)
+  const margenValor = precioVenta - costoTotal
 
   function addItem() {
     setItems(prev => [...prev, { materialId: '', cantidad: 1 }])
@@ -393,7 +401,7 @@ export default function CalculadoraClient({ materiales }: { materiales: Material
               <span className="text-lg font-bold text-gray-500">%</span>
             </div>
           </div>
-          <p className="mt-2 text-xs text-gray-400">Precio = costo total x (1 + margen%)</p>
+          <p className="mt-2 text-xs text-gray-400">Precio = costo total x (1 + margen%), redondeado hacia arriba</p>
         </div>
       </div>
 

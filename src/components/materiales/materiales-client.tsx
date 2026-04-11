@@ -180,7 +180,7 @@ export default function MaterialesClient({ materiales }: { materiales: Material[
         onClose={closeModal}
         title={editing ? 'Editar Material' : 'Agregar Material'}
       >
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form key={editing ? `edit-${editing.id}` : 'add-material'} onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
               Nombre <span className="text-red-500">*</span>

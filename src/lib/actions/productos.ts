@@ -14,6 +14,13 @@ export interface SaveProductoInput {
   margen: number
 }
 
+function roundSuggestedPrice(n: number) {
+  const hasDecimals = n % 1 !== 0
+  const step = hasDecimals ? 50 : 10
+
+  return Math.ceil(n / step) * step
+}
+
 function sortImages(images?: ProductoImagen[] | null) {
   return [...(images ?? [])].sort((a, b) => a.orden - b.orden)
 }
@@ -61,7 +68,7 @@ export async function saveProducto(input: SaveProductoInput) {
 
   const costo_mo = horas_mo * valor_hora
   const costo_total = costo_materiales + costo_mo + gastos_generales
-  const precio_venta = costo_total * (1 + margen / 100)
+  const precio_venta = roundSuggestedPrice(costo_total * (1 + margen / 100))
 
   const { data: producto, error: pErr } = await supabase
     .from('productos')
