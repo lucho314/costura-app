@@ -105,11 +105,24 @@ async function recalculateProductsForMaterial(userId: string, materialId: number
   return { success: true }
 }
 
+async function validateProveedor(proveedorId: number | null) {
+  if (proveedorId === null) return null
+
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('proveedores')
+    .select('id')
+    .eq('id', proveedorId)
+    .maybeSingle()
+
+  return data
+}
+
 export async function getMateriales() {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('materiales')
-    .select('*')
+    .select('*, proveedor:proveedores(id, user_id, nombre, created_at)')
     .order('nombre')
   if (error) throw new Error(error.message)
   return data
@@ -123,10 +136,16 @@ export async function createMaterial(formData: FormData) {
   const nombre = (formData.get('nombre') as string).trim()
   const unidad = formData.get('unidad') as Unidad
   const precio = parseFloat(formData.get('precio') as string)
+  const proveedorValue = (formData.get('proveedor_id') as string | null) ?? ''
+  const proveedor_id = proveedorValue ? Number.parseInt(proveedorValue, 10) : null
 
   if (!nombre) return { error: 'El nombre es requerido.' }
   if (!unidad) return { error: 'Seleccioná una unidad de medida.' }
   if (isNaN(precio) || precio < 0) return { error: 'Precio inválido.' }
+  if (proveedorValue && (proveedor_id === null || !Number.isFinite(proveedor_id) || proveedor_id <= 0)) return { error: 'Proveedor inválido.' }
+
+  const proveedor = await validateProveedor(proveedor_id)
+  if (proveedor_id !== null && !proveedor) return { error: 'Proveedor inválido.' }
 
   // Check duplicate
   const { data: existing } = await supabase
@@ -140,7 +159,7 @@ export async function createMaterial(formData: FormData) {
 
   const { error } = await supabase
     .from('materiales')
-    .insert({ user_id: user.id, nombre, unidad, precio })
+    .insert({ user_id: user.id, nombre, unidad, precio, proveedor_id })
 
   if (error) return { error: error.message }
 
@@ -157,10 +176,16 @@ export async function updateMaterial(id: number, formData: FormData) {
   const nombre = (formData.get('nombre') as string).trim()
   const unidad = formData.get('unidad') as Unidad
   const precio = parseFloat(formData.get('precio') as string)
+  const proveedorValue = (formData.get('proveedor_id') as string | null) ?? ''
+  const proveedor_id = proveedorValue ? Number.parseInt(proveedorValue, 10) : null
 
   if (!nombre) return { error: 'El nombre es requerido.' }
   if (!unidad) return { error: 'Seleccioná una unidad de medida.' }
   if (isNaN(precio) || precio < 0) return { error: 'Precio inválido.' }
+  if (proveedorValue && (proveedor_id === null || !Number.isFinite(proveedor_id) || proveedor_id <= 0)) return { error: 'Proveedor inválido.' }
+
+  const proveedor = await validateProveedor(proveedor_id)
+  if (proveedor_id !== null && !proveedor) return { error: 'Proveedor inválido.' }
 
   const { data: dup } = await supabase
     .from('materiales')
@@ -174,7 +199,7 @@ export async function updateMaterial(id: number, formData: FormData) {
 
   const { error } = await supabase
     .from('materiales')
-    .update({ nombre, unidad, precio })
+    .update({ nombre, unidad, precio, proveedor_id })
     .eq('id', id)
     .eq('user_id', user.id)
 

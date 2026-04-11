@@ -1,0 +1,878 @@
+[
+  {
+    "name": "Alemar Accesorios",
+    "formatted_address": "Acceso Pres. Raul Alfonsin 1056, E3116 Crespo, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 4.7,
+    "user_ratings_total": 47,
+    "types": [
+      "establishment",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJ6w-4OqAktJUR47_6c9wVCMo",
+    "source_queries": [
+      "insumos para costura en Crespo, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "Crespo, Entre Rios, Argentina"
+    ],
+    "matched_locality": "Crespo, Entre Rios, Argentina",
+    "formatted_phone_number": "0343 428-9400",
+    "international_phone_number": "+54 343 428-9400",
+    "website": "https://www.facebook.com/alemar.accesorios",
+    "google_maps_url": "https://maps.google.com/?cid=14557909832057929699",
+    "lat": -32.0191921,
+    "lng": -60.3022845,
+    "opening_hours": [
+      "lunes: 3:00–24:00",
+      "martes: 8:00–12:00, 15:00–19:00",
+      "miércoles: 8:00–12:00, 15:30–19:00",
+      "jueves: 8:00–12:00, 15:00–19:00",
+      "viernes: 8:00–12:00, 15:00–19:00",
+      "sábado: Cerrado",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "Casa Marale",
+    "formatted_address": "Av. Los Eucaliptos 19, E3101 Oro Verde, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 4.6,
+    "user_ratings_total": 162,
+    "types": [
+      "book_store",
+      "establishment",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJg58Kqo1LtJURYaFrrYktNIo",
+    "source_queries": [
+      "insumos para costura en Oro Verde, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "Oro Verde, Entre Rios, Argentina"
+    ],
+    "matched_locality": "Oro Verde, Entre Rios, Argentina",
+    "formatted_phone_number": "0343 497-5303",
+    "international_phone_number": "+54 343 497-5303",
+    "website": null,
+    "google_maps_url": "https://maps.google.com/?cid=9958634745366290785",
+    "lat": -31.8240321,
+    "lng": -60.5154359,
+    "opening_hours": [
+      "lunes: 9:00–13:00, 16:30–20:30",
+      "martes: 9:00–13:00, 16:30–20:30",
+      "miércoles: 9:00–13:00, 16:30–20:30",
+      "jueves: 9:00–13:00, 16:30–20:30",
+      "viernes: 9:00–13:00, 16:30–20:30",
+      "sábado: 9:00–13:00, 16:30–20:30",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "Confecciones Miri B.",
+    "formatted_address": "J. Roca 2814, 3107 San Benito, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 4.3,
+    "user_ratings_total": 3,
+    "types": [
+      "establishment",
+      "point_of_interest"
+    ],
+    "place_id": "ChIJJ2mfkIZPtJUR5Ofa94gJSJw",
+    "source_queries": [
+      "insumos para costura en San Benito, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "San Benito, Entre Rios, Argentina"
+    ],
+    "matched_locality": "San Benito, Entre Rios, Argentina",
+    "formatted_phone_number": "0343 530-1093",
+    "international_phone_number": "+54 343 530-1093",
+    "website": "https://www.instagram.com/confeccionesmirib",
+    "google_maps_url": "https://maps.google.com/?cid=11261261352118446052",
+    "lat": -31.7717168,
+    "lng": -60.4177241,
+    "opening_hours": [
+      "lunes: 8:00–20:00",
+      "martes: 16:00–20:00",
+      "miércoles: 8:00–20:00",
+      "jueves: 16:00–20:00",
+      "viernes: 8:00–20:00",
+      "sábado: Cerrado",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "DONATELLA",
+    "formatted_address": "San Martín 908, E3116 Crespo, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 3.9,
+    "user_ratings_total": 12,
+    "types": [
+      "establishment",
+      "home_goods_store",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJ0exiVKAktJURn9CXlU2yXv8",
+    "source_queries": [
+      "casa de telas en Crespo, Entre Rios, Argentina",
+      "insumos para costura en Crespo, Entre Rios, Argentina",
+      "merceria en Crespo, Entre Rios, Argentina",
+      "mercería en Crespo, Entre Rios, Argentina",
+      "tienda de telas en Crespo, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "Crespo, Entre Rios, Argentina"
+    ],
+    "matched_locality": "Crespo, Entre Rios, Argentina",
+    "formatted_phone_number": "0343 495-4751",
+    "international_phone_number": "+54 343 495-4751",
+    "website": null,
+    "google_maps_url": "https://maps.google.com/?cid=18401341173774405791",
+    "lat": -32.029995,
+    "lng": -60.306442,
+    "opening_hours": [
+      "lunes: 8:00–12:00, 15:30–19:30",
+      "martes: 8:00–12:00, 15:30–19:30",
+      "miércoles: 8:00–12:00, 15:30–19:30",
+      "jueves: 8:00–12:00, 15:30–19:30",
+      "viernes: 8:00–12:00, 15:30–19:30",
+      "sábado: 8:30–12:30",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "Escobi Mayorista",
+    "formatted_address": "Nuestra Señora de Guadalupe 1863, San Benito, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 4.3,
+    "user_ratings_total": 4,
+    "types": [
+      "establishment",
+      "point_of_interest"
+    ],
+    "place_id": "ChIJKRnitJBNtJURtToMpVBRbTw",
+    "source_queries": [
+      "insumos para costura en San Benito, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "San Benito, Entre Rios, Argentina"
+    ],
+    "matched_locality": "San Benito, Entre Rios, Argentina",
+    "formatted_phone_number": "0343 453-9812",
+    "international_phone_number": "+54 343 453-9812",
+    "website": null,
+    "google_maps_url": "https://maps.google.com/?cid=4354225821545413301",
+    "lat": -31.7670967,
+    "lng": -60.42785869999999,
+    "opening_hours": [
+      "lunes: 9:00–17:00",
+      "martes: 9:00–17:00",
+      "miércoles: 9:00–17:00",
+      "jueves: 9:00–17:00",
+      "viernes: 9:00–17:00",
+      "sábado: 8:00–12:00",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "Hamelin taller de costura y bordados computarizados",
+    "formatted_address": "Moreno 744, E3116 Crespo, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 4.9,
+    "user_ratings_total": 17,
+    "types": [
+      "clothing_store",
+      "establishment",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJvS5JndEltJURs0qH9tquhrE",
+    "source_queries": [
+      "insumos para costura en Crespo, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "Crespo, Entre Rios, Argentina"
+    ],
+    "matched_locality": "Crespo, Entre Rios, Argentina",
+    "formatted_phone_number": "0343 425-7559",
+    "international_phone_number": "+54 343 425-7559",
+    "website": null,
+    "google_maps_url": "https://maps.google.com/?cid=12792104047054637747",
+    "lat": -32.0265784,
+    "lng": -60.3142595,
+    "opening_hours": [
+      "lunes: 9:00–12:00, 16:00–19:00",
+      "martes: 9:00–12:00, 16:00–19:00",
+      "miércoles: 9:00–12:00, 16:00–19:00",
+      "jueves: 9:00–12:00, 16:00–19:00",
+      "viernes: 9:00–19:00",
+      "sábado: Cerrado",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "Insumos Oro Verde",
+    "formatted_address": "Los Colibríes 219, E3100XAD Oro Verde, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 4.6,
+    "user_ratings_total": 54,
+    "types": [
+      "electronics_store",
+      "establishment",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJDQVozo1LtJURBatHaJ_qZuY",
+    "source_queries": [
+      "insumos para costura en Oro Verde, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "Oro Verde, Entre Rios, Argentina"
+    ],
+    "matched_locality": "Oro Verde, Entre Rios, Argentina",
+    "formatted_phone_number": "0343 455-7820",
+    "international_phone_number": "+54 343 455-7820",
+    "website": "https://www.instagram.com/insumos_oro_verde/",
+    "google_maps_url": "https://maps.google.com/?cid=16602215046718139141",
+    "lat": -31.8255498,
+    "lng": -60.51584889999999,
+    "opening_hours": [
+      "lunes: 9:00–12:30, 16:30–20:00",
+      "martes: 9:00–12:30, 16:30–20:00",
+      "miércoles: 9:00–12:30, 16:30–20:00",
+      "jueves: 9:00–12:30, 16:30–20:00",
+      "viernes: 9:00–12:30, 16:30–20:00",
+      "sábado: 9:00–12:30, 16:30–20:00",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "La Casita De Santino",
+    "formatted_address": "Av. Guido Marizza 506, E3107 San Benito, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 4.2,
+    "user_ratings_total": 57,
+    "types": [
+      "establishment",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJc0fkJBpPtJURTxEwawHdMwg",
+    "source_queries": [
+      "merceria en San Benito, Entre Rios, Argentina",
+      "mercería en San Benito, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "San Benito, Entre Rios, Argentina"
+    ],
+    "matched_locality": "San Benito, Entre Rios, Argentina",
+    "formatted_phone_number": "0343 404-4331",
+    "international_phone_number": "+54 343 404-4331",
+    "website": null,
+    "google_maps_url": "https://maps.google.com/?cid=591058974278685007",
+    "lat": -31.7852562,
+    "lng": -60.4364448,
+    "opening_hours": [
+      "lunes: 9:00–12:30, 17:00–20:30",
+      "martes: 9:00–12:30, 17:00–20:30",
+      "miércoles: 9:00–12:30, 17:00–20:30",
+      "jueves: 9:00–12:30, 17:00–20:30",
+      "viernes: 9:00–12:30, 17:00–20:30",
+      "sábado: 9:00–13:00, 17:00–20:30",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "Laneria mercería GRACY",
+    "formatted_address": "San Martín 524, E3116 Crespo, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 5,
+    "user_ratings_total": 3,
+    "types": [
+      "establishment",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJRTkxxS8jtJURJeaK3yV9GZo",
+    "source_queries": [
+      "merceria en Crespo, Entre Rios, Argentina",
+      "mercería en Crespo, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "Crespo, Entre Rios, Argentina"
+    ],
+    "matched_locality": "Crespo, Entre Rios, Argentina",
+    "formatted_phone_number": null,
+    "international_phone_number": null,
+    "website": null,
+    "google_maps_url": "https://maps.google.com/?cid=11104043957876352549",
+    "lat": -32.0266889,
+    "lng": -60.3023462,
+    "opening_hours": [
+      "lunes: 9:00–12:00, 16:00–20:00",
+      "martes: 9:00–12:00, 16:00–20:00",
+      "miércoles: 9:00–12:00, 16:00–20:00",
+      "jueves: 9:00–12:00, 16:00–20:00",
+      "viernes: 9:00–12:00, 16:00–20:00",
+      "sábado: 9:00–12:00",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "Litoral Textil",
+    "formatted_address": "Otto Sagemüller 943, E3116 Crespo, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 4.4,
+    "user_ratings_total": 45,
+    "types": [
+      "establishment",
+      "home_goods_store",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJlxkE0UsltJUR5YXeH77DxxM",
+    "source_queries": [
+      "casa de telas en Crespo, Entre Rios, Argentina",
+      "insumos para costura en Crespo, Entre Rios, Argentina",
+      "mercería en Crespo, Entre Rios, Argentina",
+      "tienda de telas en Crespo, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "Crespo, Entre Rios, Argentina"
+    ],
+    "matched_locality": "Crespo, Entre Rios, Argentina",
+    "formatted_phone_number": "0343 495-1606",
+    "international_phone_number": "+54 343 495-1606",
+    "website": null,
+    "google_maps_url": "https://maps.google.com/?cid=1425323028431930853",
+    "lat": -32.0296481,
+    "lng": -60.3074351,
+    "opening_hours": [
+      "lunes: 8:00–12:00, 15:30–19:30",
+      "martes: 8:00–12:00, 15:30–19:30",
+      "miércoles: 8:00–12:00, 15:30–19:30",
+      "jueves: 8:00–12:00, 15:30–19:30",
+      "viernes: 8:00–12:00, 15:30–19:30",
+      "sábado: 8:00–12:00",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "Lo de Moni",
+    "formatted_address": "Humberto Seri, Av. Tratado del Pilar y, E3116 Crespo, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 4.7,
+    "user_ratings_total": 27,
+    "types": [
+      "establishment",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJ--1lLJihtpURdhFeDzii_iE",
+    "source_queries": [
+      "casa de telas en Crespo, Entre Rios, Argentina",
+      "insumos para costura en Crespo, Entre Rios, Argentina",
+      "merceria en Crespo, Entre Rios, Argentina",
+      "mercería en Crespo, Entre Rios, Argentina",
+      "tienda de telas en Crespo, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "Crespo, Entre Rios, Argentina"
+    ],
+    "matched_locality": "Crespo, Entre Rios, Argentina",
+    "formatted_phone_number": "0343 15-448-7598",
+    "international_phone_number": "+54 9 343 448-7598",
+    "website": null,
+    "google_maps_url": "https://maps.google.com/?cid=2449573608995819894",
+    "lat": -32.0342355,
+    "lng": -60.3097162,
+    "opening_hours": [
+      "lunes: 8:15–12:00, 16:00–20:00",
+      "martes: 8:15–12:00, 16:00–20:00",
+      "miércoles: 8:15–12:00, 16:00–20:00",
+      "jueves: 8:15–12:00, 16:00–20:00",
+      "viernes: 8:15–12:00, 16:00–20:00",
+      "sábado: 8:15–12:00",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "M lanas y más",
+    "formatted_address": "Ruta N 12, Seguí y, 3107 San Benito, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 4,
+    "user_ratings_total": 10,
+    "types": [
+      "establishment",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJz7qoTOlNtJURL1bYElU2nfc",
+    "source_queries": [
+      "insumos para costura en San Benito, Entre Rios, Argentina",
+      "merceria en San Benito, Entre Rios, Argentina",
+      "mercería en San Benito, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "San Benito, Entre Rios, Argentina"
+    ],
+    "matched_locality": "San Benito, Entre Rios, Argentina",
+    "formatted_phone_number": null,
+    "international_phone_number": null,
+    "website": "https://www.facebook.com/mlanas_ymas-108634107609870",
+    "google_maps_url": "https://maps.google.com/?cid=17842477037728060975",
+    "lat": -31.7674155,
+    "lng": -60.427061,
+    "opening_hours": [
+      "lunes: 8:30–12:30, 16:00–19:30",
+      "martes: 8:30–12:30, 16:00–19:30",
+      "miércoles: 8:30–12:30, 16:00–19:30",
+      "jueves: 8:30–12:30, 16:00–19:30",
+      "viernes: 8:30–12:30, 16:00–19:30",
+      "sábado: 9:00–12:30",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "Maria Eva",
+    "formatted_address": "Av. Friuli 1309, San Benito, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 4.7,
+    "user_ratings_total": 33,
+    "types": [
+      "clothing_store",
+      "establishment",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJvd2PUHNStJURncVDqPoljGE",
+    "source_queries": [
+      "insumos para costura en San Benito, Entre Rios, Argentina",
+      "merceria en San Benito, Entre Rios, Argentina",
+      "mercería en San Benito, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "San Benito, Entre Rios, Argentina"
+    ],
+    "matched_locality": "San Benito, Entre Rios, Argentina",
+    "formatted_phone_number": "0343 497-3760",
+    "international_phone_number": "+54 343 497-3760",
+    "website": "https://www.instagram.com/mariaevaropa?igsh=ejFtMWV2dm1uMHV2",
+    "google_maps_url": "https://maps.google.com/?cid=7029034876913567133",
+    "lat": -31.7850866,
+    "lng": -60.43977330000001,
+    "opening_hours": [
+      "lunes: 9:00–12:30, 16:30–20:30",
+      "martes: 9:00–12:30, 16:30–20:30",
+      "miércoles: 9:00–12:30, 16:30–20:30",
+      "jueves: 9:00–12:30, 16:30–20:30",
+      "viernes: 9:00–12:30, 16:30–20:30",
+      "sábado: 9:00–13:00, 17:00–20:30",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "Merceria Medio punto",
+    "formatted_address": "Los, C. Los Zorzales 242, E3100 Oro Verde, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 4,
+    "user_ratings_total": 4,
+    "types": [
+      "book_store",
+      "establishment",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJEUqIW4BTtJUR4QeBz9O0RUY",
+    "source_queries": [
+      "insumos para costura en Oro Verde, Entre Rios, Argentina",
+      "merceria en Oro Verde, Entre Rios, Argentina",
+      "mercería en Oro Verde, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "Oro Verde, Entre Rios, Argentina"
+    ],
+    "matched_locality": "Oro Verde, Entre Rios, Argentina",
+    "formatted_phone_number": "0343 519-4914",
+    "international_phone_number": "+54 343 519-4914",
+    "website": "http://www.facebook.com/medio-punto-166585366755963",
+    "google_maps_url": "https://maps.google.com/?cid=5063652177860429793",
+    "lat": -31.82501409999999,
+    "lng": -60.5147918,
+    "opening_hours": [
+      "lunes: 9:00–20:30",
+      "martes: 9:00–20:30",
+      "miércoles: 9:00–20:30",
+      "jueves: 9:00–20:30",
+      "viernes: 9:00–20:30",
+      "sábado: 9:00–12:30",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "Merceria y telas Dolly",
+    "formatted_address": "9 de Julio 1316, E3107 San Benito, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 5,
+    "user_ratings_total": 2,
+    "types": [
+      "establishment",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJc0-yuEpPtJURjS0c5TQGP0I",
+    "source_queries": [
+      "casa de telas en San Benito, Entre Rios, Argentina",
+      "insumos para costura en San Benito, Entre Rios, Argentina",
+      "merceria en San Benito, Entre Rios, Argentina",
+      "mercería en San Benito, Entre Rios, Argentina",
+      "tienda de telas en San Benito, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "San Benito, Entre Rios, Argentina"
+    ],
+    "matched_locality": "San Benito, Entre Rios, Argentina",
+    "formatted_phone_number": null,
+    "international_phone_number": null,
+    "website": null,
+    "google_maps_url": "https://maps.google.com/?cid=4773540954287910285",
+    "lat": -31.783781,
+    "lng": -60.4394232,
+    "opening_hours": null
+  },
+  {
+    "name": "Mercería la Nona Más..",
+    "formatted_address": "Av. Los Cisnes 1443, Oro Verde, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": null,
+    "user_ratings_total": null,
+    "types": [
+      "establishment",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJQTIoDQBNtJURiDGnU63fdqk",
+    "source_queries": [
+      "insumos para costura en Oro Verde, Entre Rios, Argentina",
+      "merceria en Oro Verde, Entre Rios, Argentina",
+      "mercería en Oro Verde, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "Oro Verde, Entre Rios, Argentina"
+    ],
+    "matched_locality": "Oro Verde, Entre Rios, Argentina",
+    "formatted_phone_number": null,
+    "international_phone_number": null,
+    "website": null,
+    "google_maps_url": "https://maps.google.com/?cid=12211193375187480968",
+    "lat": -31.8133979,
+    "lng": -60.5129056,
+    "opening_hours": [
+      "lunes: 9:00–0:30",
+      "martes: 9:00–0:30",
+      "miércoles: 9:00–0:30",
+      "jueves: 9:00–0:30",
+      "viernes: 9:00–0:30",
+      "sábado: 9:00–24:00",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "Mercería Mis dos estrellas mágicas",
+    "formatted_address": "San Benito, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 4.8,
+    "user_ratings_total": 34,
+    "types": [
+      "establishment",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJ6yCMp15PtJURC5UOYT8GWhg",
+    "source_queries": [
+      "insumos para costura en San Benito, Entre Rios, Argentina",
+      "merceria en San Benito, Entre Rios, Argentina",
+      "mercería en San Benito, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "San Benito, Entre Rios, Argentina"
+    ],
+    "matched_locality": "San Benito, Entre Rios, Argentina",
+    "formatted_phone_number": "0343 524-9005",
+    "international_phone_number": "+54 343 524-9005",
+    "website": null,
+    "google_maps_url": "https://maps.google.com/?cid=1754721874095281419",
+    "lat": -31.7771203,
+    "lng": -60.43555600000001,
+    "opening_hours": [
+      "lunes: 9:00–13:00, 16:30–20:00",
+      "martes: 9:00–13:00, 16:30–20:00",
+      "miércoles: 9:00–13:00, 16:30–20:00",
+      "jueves: 9:00–13:00, 16:30–20:00",
+      "viernes: 9:00–13:00, 16:00–20:00",
+      "sábado: 9:00–13:00, 16:30–20:00",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "MIA INSUMOS",
+    "formatted_address": "ER3116, San Martín 1002, E3116 Crespo, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 4.6,
+    "user_ratings_total": 10,
+    "types": [
+      "establishment",
+      "point_of_interest",
+      "shopping_mall"
+    ],
+    "place_id": "ChIJ6QvlB0kltJURRi9YvQz2v2M",
+    "source_queries": [
+      "insumos para costura en Crespo, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "Crespo, Entre Rios, Argentina"
+    ],
+    "matched_locality": "Crespo, Entre Rios, Argentina",
+    "formatted_phone_number": "0343 509-4882",
+    "international_phone_number": "+54 343 509-4882",
+    "website": "https://www.facebook.com/miainsumoscrespo",
+    "google_maps_url": "https://maps.google.com/?cid=7187734064883314502",
+    "lat": -32.030804,
+    "lng": -60.3074988,
+    "opening_hours": [
+      "lunes: 9:30–19:30",
+      "martes: 9:30–19:30",
+      "miércoles: 9:30–19:30",
+      "jueves: 9:30–19:30",
+      "viernes: 9:30–19:30",
+      "sábado: 9:30–12:30",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "S&A Indumentaria Unisex",
+    "formatted_address": "Av. Guido Marizza & Concordia, San Benito, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 4.6,
+    "user_ratings_total": 24,
+    "types": [
+      "clothing_store",
+      "establishment",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJSx0nihlPtJURPd5-7FmMcHM",
+    "source_queries": [
+      "insumos para costura en San Benito, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "San Benito, Entre Rios, Argentina"
+    ],
+    "matched_locality": "San Benito, Entre Rios, Argentina",
+    "formatted_phone_number": null,
+    "international_phone_number": null,
+    "website": null,
+    "google_maps_url": "https://maps.google.com/?cid=8318302829601021501",
+    "lat": -31.7693155,
+    "lng": -60.4330422,
+    "opening_hours": [
+      "lunes: 9:00–12:00, 16:00–19:30",
+      "martes: 9:00–12:00, 16:00–19:30",
+      "miércoles: 9:00–12:00, 16:00–19:30",
+      "jueves: 9:00–12:00, 16:00–19:30",
+      "viernes: 9:00–12:00, 16:00–19:30",
+      "sábado: 9:00–12:00, 17:00–19:30",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "Sirina Indumentaria",
+    "formatted_address": "Los Jacarandaes 298, E3100 Oro Verde, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 4.7,
+    "user_ratings_total": 30,
+    "types": [
+      "clothing_store",
+      "establishment",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJHbdbZo5LtJURPC3AJUgDqcU",
+    "source_queries": [
+      "insumos para costura en Oro Verde, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "Oro Verde, Entre Rios, Argentina"
+    ],
+    "matched_locality": "Oro Verde, Entre Rios, Argentina",
+    "formatted_phone_number": "0343 446-7015",
+    "international_phone_number": "+54 343 446-7015",
+    "website": "http://www.sirina.com.ar/",
+    "google_maps_url": "https://maps.google.com/?cid=14242918904941784380",
+    "lat": -31.823618,
+    "lng": -60.5199835,
+    "opening_hours": [
+      "lunes: 17:00–20:30",
+      "martes: 17:00–20:30",
+      "miércoles: 17:00–20:30",
+      "jueves: 17:00–20:30",
+      "viernes: 17:00–20:30",
+      "sábado: 9:30–12:30, 17:00–20:30",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "Telas de ORO",
+    "formatted_address": "Las Tacuaritas, Av. Los Chañares y Local 3, E3100 Oro Verde, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 4.9,
+    "user_ratings_total": 65,
+    "types": [
+      "establishment",
+      "home_goods_store",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJ--8emgRLtJURxqv6Nmf-TJc",
+    "source_queries": [
+      "casa de telas en Oro Verde, Entre Rios, Argentina",
+      "insumos para costura en Oro Verde, Entre Rios, Argentina",
+      "merceria en Oro Verde, Entre Rios, Argentina",
+      "mercería en Oro Verde, Entre Rios, Argentina",
+      "tienda de telas en Oro Verde, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "Oro Verde, Entre Rios, Argentina"
+    ],
+    "matched_locality": "Oro Verde, Entre Rios, Argentina",
+    "formatted_phone_number": "0343 15-471-5497",
+    "international_phone_number": "+54 9 343 471-5497",
+    "website": null,
+    "google_maps_url": "https://maps.google.com/?cid=10902368517214612422",
+    "lat": -31.8196846,
+    "lng": -60.52318159999999,
+    "opening_hours": [
+      "lunes: 9:00–12:30, 16:00–20:00",
+      "martes: 9:00–12:30, 16:00–20:00",
+      "miércoles: 9:00–12:30, 16:00–20:00",
+      "jueves: 9:00–12:30, 16:00–20:00",
+      "viernes: 9:00–12:30, 16:00–20:00",
+      "sábado: 9:00–13:00",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "Tienda de Telas",
+    "formatted_address": "Av. San Martín 483, E3107 San Benito, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 4,
+    "user_ratings_total": 7,
+    "types": [
+      "establishment",
+      "home_goods_store",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJ98ScyYRPtJUR7r1tr3vo9k4",
+    "source_queries": [
+      "casa de telas en San Benito, Entre Rios, Argentina",
+      "insumos para costura en San Benito, Entre Rios, Argentina",
+      "mercería en San Benito, Entre Rios, Argentina",
+      "tienda de telas en San Benito, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "San Benito, Entre Rios, Argentina"
+    ],
+    "matched_locality": "San Benito, Entre Rios, Argentina",
+    "formatted_phone_number": "0343 513-9000",
+    "international_phone_number": "+54 343 513-9000",
+    "website": null,
+    "google_maps_url": "https://maps.google.com/?cid=5689990797151026670",
+    "lat": -31.784625,
+    "lng": -60.4439766,
+    "opening_hours": [
+      "lunes: 9:00–20:30",
+      "martes: 9:00–20:30",
+      "miércoles: 9:00–20:30",
+      "jueves: 9:00–20:30",
+      "viernes: 9:00–20:30",
+      "sábado: 9:00–20:30",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "Turmalina",
+    "formatted_address": "C. Los Zorzales 242, E3100 Oro Verde, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 5,
+    "user_ratings_total": 2,
+    "types": [
+      "book_store",
+      "establishment",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJqx3mWOJLtJURyP5L4xmsFFA",
+    "source_queries": [
+      "mercería en Oro Verde, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "Oro Verde, Entre Rios, Argentina"
+    ],
+    "matched_locality": "Oro Verde, Entre Rios, Argentina",
+    "formatted_phone_number": "0343 462-4807",
+    "international_phone_number": "+54 343 462-4807",
+    "website": "https://instagram.com/turmalina.libreria.regaleria?igshid=YmMyMTA2M2Y=",
+    "google_maps_url": "https://maps.google.com/?cid=5770426249756016328",
+    "lat": -31.825014,
+    "lng": -60.5147919,
+    "opening_hours": [
+      "lunes: 9:00–14:00, 16:30–20:30",
+      "martes: 9:00–20:30",
+      "miércoles: 9:00–14:00, 16:30–20:30",
+      "jueves: 9:00–20:30",
+      "viernes: 9:00–14:00, 16:30–20:30",
+      "sábado: 9:30–14:00",
+      "domingo: Cerrado"
+    ]
+  },
+  {
+    "name": "Ursula Carteras",
+    "formatted_address": "Venezuela 1484, E3107 San Benito, Entre Ríos",
+    "business_status": "OPERATIONAL",
+    "rating": 5,
+    "user_ratings_total": 25,
+    "types": [
+      "establishment",
+      "point_of_interest",
+      "store"
+    ],
+    "place_id": "ChIJS1sOcwBPtJURSxa29ELI6cg",
+    "source_queries": [
+      "insumos para costura en San Benito, Entre Rios, Argentina"
+    ],
+    "localidades": [
+      "San Benito, Entre Rios, Argentina"
+    ],
+    "matched_locality": "San Benito, Entre Rios, Argentina",
+    "formatted_phone_number": "0343 500-9813",
+    "international_phone_number": "+54 343 500-9813",
+    "website": "https://ursulacarteras.empretienda.com.ar/",
+    "google_maps_url": "https://maps.google.com/?cid=14477322667058140747",
+    "lat": -31.791553,
+    "lng": -60.4384112,
+    "opening_hours": [
+      "lunes: 9:00–12:30, 17:00–20:00",
+      "martes: 9:00–12:30, 17:00–20:00",
+      "miércoles: 9:00–12:30, 17:00–20:00",
+      "jueves: 9:00–12:30, 17:00–20:00",
+      "viernes: 9:00–12:30, 17:00–20:00",
+      "sábado: Cerrado",
+      "domingo: Cerrado"
+    ]
+  }
+]

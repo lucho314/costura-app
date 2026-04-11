@@ -3,9 +3,31 @@
 -- ============================================================
 
 -- 1. MATERIALES
+create table proveedores (
+  id          bigint primary key generated always as identity,
+  user_id     uuid references auth.users(id) on delete cascade,
+  nombre      text not null,
+  direccion   text,
+  telefono    text,
+  telefono_internacional text,
+  pagina      text,
+  google_maps_url text,
+  google_place_id text,
+  business_status text,
+  rating      numeric(2,1),
+  user_ratings_total integer,
+  source_query text,
+  place_types text[],
+  lat         double precision,
+  lng         double precision,
+  opening_hours jsonb,
+  created_at  timestamptz default now()
+);
+
 create table materiales (
   id          bigint primary key generated always as identity,
   user_id     uuid references auth.users(id) on delete cascade not null,
+  proveedor_id bigint references proveedores(id) on delete set null,
   nombre      text not null,
   unidad      text not null,
   precio      numeric(12,2) not null default 0,
@@ -55,10 +77,14 @@ create table producto_imagenes (
 --  ROW LEVEL SECURITY
 -- ============================================================
 
+alter table proveedores enable row level security;
 alter table materiales enable row level security;
 alter table productos enable row level security;
 alter table producto_materiales enable row level security;
 alter table producto_imagenes enable row level security;
+
+create policy "proveedores_all_authenticated" on proveedores
+  for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
 -- Materiales: solo el dueño
 create policy "materiales_all" on materiales
@@ -86,7 +112,10 @@ create policy "producto_imagenes_all" on producto_imagenes
 --  ÍNDICES
 -- ============================================================
 
+create index proveedores_user_id_idx on proveedores(user_id);
+create unique index proveedores_google_place_id_key on proveedores(google_place_id) where google_place_id is not null;
 create index materiales_user_id_idx on materiales(user_id);
+create index materiales_proveedor_id_idx on materiales(proveedor_id);
 create index productos_user_id_idx on productos(user_id);
 create index producto_materiales_producto_id_idx on producto_materiales(producto_id);
 create index producto_imagenes_producto_id_idx on producto_imagenes(producto_id, orden);

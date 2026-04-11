@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 
 const NAV_LINKS = [
   { href: '/materiales', label: '📦 Materiales' },
+  { href: '/proveedores', label: '🏷️ Proveedores' },
   { href: '/calculadora', label: '🧮 Crear producto' },
   { href: '/productos', label: '🗂️ Stock' },
 ]

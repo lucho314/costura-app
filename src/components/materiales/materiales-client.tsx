@@ -4,7 +4,7 @@ import { useCallback, useState, useTransition } from 'react'
 import Modal from '@/components/ui/modal'
 import Toast from '@/components/ui/toast'
 import { createMaterial, deleteMaterial, updateMaterial } from '@/lib/actions/materiales'
-import type { Material } from '@/types'
+import type { Material, Proveedor } from '@/types'
 import { UNIDADES } from '@/types'
 
 interface ToastState {
@@ -19,28 +19,53 @@ function fmoney(n: number) {
   })
 }
 
-export default function MaterialesClient({ materiales }: { materiales: Material[] }) {
+export default function MaterialesClient({
+  materiales,
+  proveedores,
+}: {
+  materiales: Material[]
+  proveedores: Proveedor[]
+}) {
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Material | null>(null)
+  const [selectedProveedorId, setSelectedProveedorId] = useState<number | null>(null)
+  const [proveedorQuery, setProveedorQuery] = useState('')
+  const [proveedorFocused, setProveedorFocused] = useState(false)
   const [error, setError] = useState('')
   const [toast, setToast] = useState<ToastState | null>(null)
   const [search, setSearch] = useState('')
   const [isPending, startTransition] = useTransition()
 
+  const proveedorOptions = proveedores.map(proveedor => ({
+    id: proveedor.id,
+    label: proveedor.nombre,
+  }))
+
+  const filteredProveedorOptions = proveedorQuery.trim() === ''
+    ? proveedorOptions.slice(0, 8)
+    : proveedorOptions
+      .filter(proveedor => proveedor.label.toLowerCase().includes(proveedorQuery.toLowerCase()))
+      .slice(0, 8)
+
   const filtered = materiales.filter(
     m =>
       m.nombre.toLowerCase().includes(search.toLowerCase()) ||
-      m.unidad.toLowerCase().includes(search.toLowerCase())
+      m.unidad.toLowerCase().includes(search.toLowerCase()) ||
+      (m.proveedor?.nombre ?? '').toLowerCase().includes(search.toLowerCase())
   )
 
   function openAdd() {
     setEditing(null)
+    setSelectedProveedorId(null)
+    setProveedorQuery('')
     setError('')
     setModalOpen(true)
   }
 
   function openEdit(m: Material) {
     setEditing(m)
+    setSelectedProveedorId(m.proveedor_id)
+    setProveedorQuery(m.proveedor?.nombre ?? '')
     setError('')
     setModalOpen(true)
   }
@@ -48,6 +73,8 @@ export default function MaterialesClient({ materiales }: { materiales: Material[
   function closeModal() {
     setModalOpen(false)
     setEditing(null)
+    setSelectedProveedorId(null)
+    setProveedorQuery('')
     setError('')
   }
 
@@ -55,6 +82,7 @@ export default function MaterialesClient({ materiales }: { materiales: Material[
     e.preventDefault()
     setError('')
     const formData = new FormData(e.currentTarget)
+    formData.set('proveedor_id', selectedProveedorId ? String(selectedProveedorId) : '')
 
     startTransition(async () => {
       const res = editing
@@ -81,6 +109,19 @@ export default function MaterialesClient({ materiales }: { materiales: Material[
         setToast({ message: 'Material eliminado', type: 'error' })
       }
     })
+  }
+
+  function handleProveedorInput(value: string) {
+    setProveedorQuery(value)
+
+    const exactMatch = proveedorOptions.find(proveedor => proveedor.label.toLowerCase() === value.trim().toLowerCase())
+    setSelectedProveedorId(exactMatch?.id ?? null)
+  }
+
+  function handleProveedorSelect(id: number | null, label: string) {
+    setSelectedProveedorId(id)
+    setProveedorQuery(label)
+    setProveedorFocused(false)
   }
 
   const clearToast = useCallback(() => setToast(null), [])
@@ -132,6 +173,7 @@ export default function MaterialesClient({ materiales }: { materiales: Material[
               <thead className="border-b border-gray-100 bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left font-semibold text-gray-600">Material</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-600">Proveedor</th>
                   <th className="px-4 py-3 text-left font-semibold text-gray-600">Unidad</th>
                   <th className="px-4 py-3 text-right font-semibold text-gray-600">Precio / Unidad</th>
                   <th className="px-4 py-3 text-center font-semibold text-gray-600">Acciones</th>
@@ -141,6 +183,7 @@ export default function MaterialesClient({ materiales }: { materiales: Material[
                 {filtered.map(m => (
                   <tr key={m.id} className="transition-colors hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium text-gray-900">{m.nombre}</td>
+                    <td className="px-4 py-3 text-gray-500">{m.proveedor?.nombre ?? 'Sin proveedor'}</td>
                     <td className="px-4 py-3">
                       <span className="inline-block rounded-md bg-violet-50 px-2 py-0.5 text-xs font-mono font-semibold text-violet-700">
                         {m.unidad}
@@ -193,6 +236,48 @@ export default function MaterialesClient({ materiales }: { materiales: Material[
               autoFocus
               className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-300"
             />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Proveedor</label>
+            <input type="hidden" name="proveedor_id" value={selectedProveedorId ?? ''} />
+            <div className="relative">
+              <input
+                type="text"
+                value={proveedorQuery}
+                onChange={e => handleProveedorInput(e.target.value)}
+                onFocus={() => setProveedorFocused(true)}
+                onBlur={() => setTimeout(() => setProveedorFocused(false), 150)}
+                placeholder="Buscar proveedor..."
+                autoComplete="off"
+                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-300"
+              />
+              {proveedorFocused && (
+                <div className="absolute left-0 right-0 top-full z-10 mt-2 max-h-48 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg">
+                  <button
+                    type="button"
+                    onClick={() => handleProveedorSelect(null, '')}
+                    className="block w-full px-3 py-2 text-left text-sm text-gray-500 transition-colors hover:bg-gray-50"
+                  >
+                    Sin proveedor
+                  </button>
+                  {filteredProveedorOptions.map(proveedor => (
+                    <button
+                      key={proveedor.id}
+                      type="button"
+                      onClick={() => handleProveedorSelect(proveedor.id, proveedor.label)}
+                      className="block w-full px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-violet-50 hover:text-violet-700"
+                    >
+                      {proveedor.label}
+                    </button>
+                  ))}
+                  {proveedorQuery.trim() !== '' && filteredProveedorOptions.length === 0 && (
+                    <div className="px-3 py-2 text-sm text-gray-400">No hay coincidencias</div>
+                  )}
+                </div>
+              )}
+            </div>
+            <p className="mt-1 text-xs text-gray-400">Opcional. Escribí para buscar y seleccioná un proveedor existente.</p>
           </div>
 
           <div>
