@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { href: '/proveedores', label: '🏷️ Proveedores' },
   { href: '/calculadora', label: '🧮 Crear producto' },
   { href: '/productos', label: '🗂️ Stock' },
+  { href: '/movimientos', label: '📊 Movimientos' },
 ]
 
 export default function Navbar({ user }: { user: User }) {

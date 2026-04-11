@@ -91,3 +91,58 @@ export interface CalcItem {
   materialId: number | ''
   cantidad: number
 }
+
+// ========================================
+// MOVIMIENTOS DE STOCK
+// ========================================
+
+export type TipoMovimiento = 'venta' | 'produccion' | 'ajuste'
+
+export interface MovimientoStock {
+  id: number
+  user_id: string
+  producto_id: number
+  tipo: TipoMovimiento
+  cantidad: number
+  stock_anterior: number
+  stock_nuevo: number
+  precio_venta: number | null
+  ganancia_real: number | null
+  ganancia_proyectada: number | null
+  notas: string | null
+  created_at: string
+  producto?: Producto
+}
+
+export interface RegistrarMovimientoInput {
+  productoId: number
+  tipo: TipoMovimiento
+  cantidad: number
+  precioVenta?: number
+  notas?: string
+}
+
+export interface MovimientosFiltros {
+  productoId?: number
+  tipo?: TipoMovimiento
+  desde?: string
+  hasta?: string
+}
+
+export interface EstadisticasMovimientos {
+  totalVentas: number
+  totalProduccion: number
+  totalAjustes: number
+  ventasPorMes: Array<{
+    mes: string
+    cantidad: number
+    ingresos: number
+    ganancias: number
+  }>
+  productosMasVendidos: Array<{
+    producto_id: number
+    nombre: string
+    cantidad_vendida: number
+    ingresos: number
+  }>
+}
