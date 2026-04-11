@@ -29,16 +29,26 @@ export default function ProductoDetailEditor({
   productoId,
   materiales,
   initialItems,
-  margen,
+  margen: initialMargen,
+  horasMo: initialHorasMo,
+  valorHora: initialValorHora,
+  gastosGenerales: initialGastosGenerales,
 }: {
   productoId: number
   materiales: Material[]
   initialItems: ProductoMaterial[]
   margen: number
+  horasMo: number
+  valorHora: number
+  gastosGenerales: number
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState<EditableItem[]>(() => toEditableItems(initialItems))
+  const [margen, setMargen] = useState(initialMargen)
+  const [horasMo, setHorasMo] = useState(initialHorasMo)
+  const [valorHora, setValorHora] = useState(initialValorHora)
+  const [gastosGenerales, setGastosGenerales] = useState(initialGastosGenerales)
   const [error, setError] = useState('')
   const [toast, setToast] = useState<ToastState | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -51,10 +61,16 @@ export default function ProductoDetailEditor({
     return sum + (material ? material.precio * item.cantidad : 0)
   }, 0)
 
-  const precioVenta = roundSuggestedPrice(costoMateriales * (1 + margen / 100))
+  const costoMo = horasMo * valorHora
+  const costoTotal = costoMateriales + costoMo + gastosGenerales
+  const precioVenta = roundSuggestedPrice(costoTotal * (1 + margen / 100))
 
   function openModal() {
     setItems(toEditableItems(initialItems))
+    setMargen(initialMargen)
+    setHorasMo(initialHorasMo)
+    setValorHora(initialValorHora)
+    setGastosGenerales(initialGastosGenerales)
     setError('')
     setOpen(true)
   }
@@ -92,6 +108,10 @@ export default function ProductoDetailEditor({
       const res = await updateProductoDetalle({
         productoId,
         items: payload,
+        margen,
+        horasMo,
+        valorHora,
+        gastosGenerales,
       })
 
       if (res?.error) {
@@ -113,7 +133,7 @@ export default function ProductoDetailEditor({
         onClick={openModal}
         className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-semibold text-violet-700 transition-all hover:border-violet-300 hover:bg-violet-100"
       >
-        Editar materiales y precio
+        Editar composición y costos
       </button>
 
       <Modal open={open} onClose={closeModal} title="Editar producto">
@@ -185,21 +205,84 @@ export default function ProductoDetailEditor({
             </div>
           </div>
 
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Horas M.O.</label>
+              <input
+                type="number"
+                value={horasMo || ''}
+                min="0"
+                step="0.01"
+                onChange={e => setHorasMo(Number.parseFloat(e.target.value) || 0)}
+                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-300"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Valor por hora</label>
+              <input
+                type="number"
+                value={valorHora || ''}
+                min="0"
+                step="0.01"
+                onChange={e => setValorHora(Number.parseFloat(e.target.value) || 0)}
+                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-300"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Gastos generales</label>
+              <input
+                type="number"
+                value={gastosGenerales || ''}
+                min="0"
+                step="0.01"
+                onChange={e => setGastosGenerales(Number.parseFloat(e.target.value) || 0)}
+                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-300"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500">Margen (%)</label>
+              <input
+                type="number"
+                value={margen || ''}
+                min="0"
+                max="1000"
+                step="0.01"
+                onChange={e => setMargen(Number.parseFloat(e.target.value) || 0)}
+                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-300"
+              />
+            </div>
+          </div>
+
           <div>
             <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-gray-500">Costo de materiales actualizado</span>
+                <span className="text-gray-500">Costo de materiales</span>
                 <span className="font-mono font-semibold text-gray-900">{fmoney(costoMateriales)}</span>
               </div>
+              <div className="mt-1 flex items-center justify-between gap-3">
+                <span className="text-gray-500">Mano de obra ({horasMo}h x {fmoney(valorHora)})</span>
+                <span className="font-mono font-semibold text-gray-900">{fmoney(costoMo)}</span>
+              </div>
+              <div className="mt-1 flex items-center justify-between gap-3">
+                <span className="text-gray-500">Gastos generales</span>
+                <span className="font-mono font-semibold text-gray-900">{fmoney(gastosGenerales)}</span>
+              </div>
               <div className="mt-2 flex items-center justify-between gap-3 border-t border-gray-200 pt-2">
-                <span className="text-gray-500">Precio sugerido automatico ({margen}%)</span>
+                <span className="font-semibold text-gray-700">Costo total</span>
+                <span className="font-mono font-bold text-gray-900">{fmoney(costoTotal)}</span>
+              </div>
+              <div className="mt-2 flex items-center justify-between gap-3 border-t border-gray-200 pt-2">
+                <span className="text-gray-500">Precio sugerido automático ({margen}%)</span>
                 <span className="font-mono text-base font-extrabold text-violet-700">{fmoney(precioVenta)}</span>
               </div>
             </div>
           </div>
 
           <div className="rounded-xl border border-violet-100 bg-violet-50 px-4 py-3 text-xs text-violet-700">
-            El precio de venta se recalcula automaticamente segun los materiales y el margen actual del producto.
+            El precio de venta se recalcula automáticamente según los costos totales y el margen configurado.
           </div>
           {error && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">

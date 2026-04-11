@@ -21,6 +21,10 @@ export interface UpdateProductoDetalleInput {
     materialId: number
     cantidad: number
   }>
+  margen: number
+  horasMo: number
+  valorHora: number
+  gastosGenerales: number
 }
 
 function sortImages(images?: ProductoImagen[] | null) {
@@ -194,7 +198,7 @@ export async function updateProductoDetalle(input: UpdateProductoDetalleInput) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
 
-  const { productoId, items } = input
+  const { productoId, items, margen, horasMo, valorHora, gastosGenerales } = input
   const normalizedItems = items
     .filter(item => Number.isFinite(item.materialId) && item.materialId > 0 && Number.isFinite(item.cantidad) && item.cantidad > 0)
 
@@ -202,7 +206,7 @@ export async function updateProductoDetalle(input: UpdateProductoDetalleInput) {
 
   const { data: producto, error: productoErr } = await supabase
     .from('productos')
-    .select('id, user_id, horas_mo, valor_hora, gastos_generales, margen')
+    .select('id, user_id')
     .eq('id', productoId)
     .eq('user_id', user.id)
     .single()
@@ -234,9 +238,8 @@ export async function updateProductoDetalle(input: UpdateProductoDetalleInput) {
   })
 
   const costo_materiales = productoMateriales.reduce((sum, item) => sum + item.subtotal, 0)
-  const costo_mo = producto.horas_mo * producto.valor_hora
-  const costo_total = costo_materiales + costo_mo + producto.gastos_generales
-  const margen = producto.margen
+  const costo_mo = horasMo * valorHora
+  const costo_total = costo_materiales + costo_mo + gastosGenerales
   const precio_venta = roundSuggestedPrice(costo_total * (1 + margen / 100))
 
   const { error: deleteErr } = await supabase
@@ -256,7 +259,10 @@ export async function updateProductoDetalle(input: UpdateProductoDetalleInput) {
     .from('productos')
     .update({
       costo_materiales,
+      horas_mo: horasMo,
+      valor_hora: valorHora,
       costo_mo,
+      gastos_generales: gastosGenerales,
       costo_total,
       margen,
       precio_venta,

@@ -78,6 +78,9 @@ export default async function ProductoDetallePage({
             materiales={materiales}
             initialItems={pm}
             margen={producto.margen}
+            horasMo={producto.horas_mo}
+            valorHora={producto.valor_hora}
+            gastosGenerales={producto.gastos_generales}
           />
         </div>
         {pm.length === 0 ? (
