@@ -1,11 +1,13 @@
 'use client'
 
-import { useCallback, useState, useTransition } from 'react'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import Modal from '@/components/ui/modal'
 import Toast from '@/components/ui/toast'
-import { createMaterial, deleteMaterial, updateMaterial } from '@/lib/actions/materiales'
+import { createMaterial, deleteMaterial, getMaterialesPage, updateMaterial } from '@/lib/actions/materiales'
 import type { Material, Proveedor } from '@/types'
 import { UNIDADES } from '@/types'
+
+const PAGE_SIZE = 15
 
 interface ToastState {
   message: string
@@ -20,12 +22,30 @@ function fmoney(n: number) {
 }
 
 export default function MaterialesClient({
-  materiales,
+  initialMateriales,
+  initialTotal,
   proveedores,
 }: {
-  materiales: Material[]
+  initialMateriales: Material[]
+  initialTotal: number
   proveedores: Proveedor[]
 }) {
+  const [items, setItems] = useState(initialMateriales)
+  const [total, setTotal] = useState(initialTotal)
+  const [search, setSearch] = useState('')
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+
+  // Refs to avoid stale closures
+  const searchRef = useRef('')
+  const offsetRef = useRef(initialMateriales.length)
+  const totalRef = useRef(initialTotal)
+  const isLoadingRef = useRef(false)
+  const sentinelRef = useRef<HTMLTableRowElement>(null)
+  const isFirstSearchRender = useRef(true)
+
+  useEffect(() => { totalRef.current = total }, [total])
+
+  // Modal / form state
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Material | null>(null)
   const [selectedProveedorId, setSelectedProveedorId] = useState<number | null>(null)
@@ -33,26 +53,93 @@ export default function MaterialesClient({
   const [proveedorFocused, setProveedorFocused] = useState(false)
   const [error, setError] = useState('')
   const [toast, setToast] = useState<ToastState | null>(null)
-  const [search, setSearch] = useState('')
   const [isPending, startTransition] = useTransition()
 
-  const proveedorOptions = proveedores.map(proveedor => ({
-    id: proveedor.id,
-    label: proveedor.nombre,
-  }))
-
+  const proveedorOptions = proveedores.map(p => ({ id: p.id, label: p.nombre }))
   const filteredProveedorOptions = proveedorQuery.trim() === ''
     ? proveedorOptions.slice(0, 8)
     : proveedorOptions
-      .filter(proveedor => proveedor.label.toLowerCase().includes(proveedorQuery.toLowerCase()))
-      .slice(0, 8)
+        .filter(p => p.label.toLowerCase().includes(proveedorQuery.toLowerCase()))
+        .slice(0, 8)
 
-  const filtered = materiales.filter(
-    m =>
-      m.nombre.toLowerCase().includes(search.toLowerCase()) ||
-      m.unidad.toLowerCase().includes(search.toLowerCase()) ||
-      (m.proveedor?.nombre ?? '').toLowerCase().includes(search.toLowerCase())
-  )
+  // ── Data fetching ──────────────────────────────────────────
+
+  const refreshList = useCallback(async () => {
+    if (isLoadingRef.current) return
+    isLoadingRef.current = true
+    setIsLoadingMore(true)
+    try {
+      const { materiales: fresh, total: newTotal } = await getMaterialesPage(
+        0, PAGE_SIZE, searchRef.current || undefined
+      )
+      setItems(fresh)
+      totalRef.current = newTotal
+      setTotal(newTotal)
+      offsetRef.current = fresh.length
+    } finally {
+      isLoadingRef.current = false
+      setIsLoadingMore(false)
+    }
+  }, [])
+
+  const loadMore = useCallback(async () => {
+    if (isLoadingRef.current || offsetRef.current >= totalRef.current) return
+    isLoadingRef.current = true
+    setIsLoadingMore(true)
+    try {
+      const { materiales: next, total: newTotal } = await getMaterialesPage(
+        offsetRef.current, PAGE_SIZE, searchRef.current || undefined
+      )
+      setItems(prev => [...prev, ...next])
+      totalRef.current = newTotal
+      setTotal(newTotal)
+      offsetRef.current += next.length
+    } finally {
+      isLoadingRef.current = false
+      setIsLoadingMore(false)
+    }
+  }, [])
+
+  // Debounced search — skips initial render
+  useEffect(() => {
+    if (isFirstSearchRender.current) {
+      isFirstSearchRender.current = false
+      return
+    }
+    const t = setTimeout(async () => {
+      if (isLoadingRef.current) return
+      searchRef.current = search
+      isLoadingRef.current = true
+      setIsLoadingMore(true)
+      try {
+        const { materiales: fresh, total: newTotal } = await getMaterialesPage(
+          0, PAGE_SIZE, search || undefined
+        )
+        setItems(fresh)
+        totalRef.current = newTotal
+        setTotal(newTotal)
+        offsetRef.current = fresh.length
+      } finally {
+        isLoadingRef.current = false
+        setIsLoadingMore(false)
+      }
+    }, 300)
+    return () => clearTimeout(t)
+  }, [search])
+
+  // Sentinel IntersectionObserver — fires loadMore when last row comes into view
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      entries => { if (entries[0].isIntersecting) loadMore() },
+      { rootMargin: '100px' }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [loadMore])
+
+  // ── Modal helpers ──────────────────────────────────────────
 
   function openAdd() {
     setEditing(null)
@@ -78,6 +165,18 @@ export default function MaterialesClient({
     setError('')
   }
 
+  function handleProveedorInput(value: string) {
+    setProveedorQuery(value)
+    const exactMatch = proveedorOptions.find(p => p.label.toLowerCase() === value.trim().toLowerCase())
+    setSelectedProveedorId(exactMatch?.id ?? null)
+  }
+
+  function handleProveedorSelect(id: number | null, label: string) {
+    setSelectedProveedorId(id)
+    setProveedorQuery(label)
+    setProveedorFocused(false)
+  }
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError('')
@@ -94,6 +193,7 @@ export default function MaterialesClient({
       } else {
         closeModal()
         setToast({ message: editing ? 'Material actualizado' : 'Material agregado', type: 'success' })
+        await refreshList()
       }
     })
   }
@@ -106,25 +206,17 @@ export default function MaterialesClient({
       if (res?.error) {
         setToast({ message: res.error, type: 'error' })
       } else {
-        setToast({ message: 'Material eliminado', type: 'error' })
+        setToast({ message: 'Material eliminado', type: 'success' })
+        await refreshList()
       }
     })
   }
 
-  function handleProveedorInput(value: string) {
-    setProveedorQuery(value)
-
-    const exactMatch = proveedorOptions.find(proveedor => proveedor.label.toLowerCase() === value.trim().toLowerCase())
-    setSelectedProveedorId(exactMatch?.id ?? null)
-  }
-
-  function handleProveedorSelect(id: number | null, label: string) {
-    setSelectedProveedorId(id)
-    setProveedorQuery(label)
-    setProveedorFocused(false)
-  }
-
   const clearToast = useCallback(() => setToast(null), [])
+
+  const hasMore = items.length < total
+
+  // ── Render ─────────────────────────────────────────────────
 
   return (
     <>
@@ -132,7 +224,7 @@ export default function MaterialesClient({
         <div>
           <h2 className="text-xl font-bold text-gray-900">Inventario de Materiales</h2>
           <p className="text-sm text-gray-500">
-            {materiales.length} material{materiales.length !== 1 ? 'es' : ''} registrado{materiales.length !== 1 ? 's' : ''}
+            {total} material{total !== 1 ? 'es' : ''} registrado{total !== 1 ? 's' : ''}
           </p>
         </div>
         <button
@@ -145,7 +237,9 @@ export default function MaterialesClient({
 
       <div className="mb-4">
         <div className="relative max-w-sm">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
           <input
             type="text"
             placeholder="Buscar material..."
@@ -156,21 +250,23 @@ export default function MaterialesClient({
         </div>
       </div>
 
+      {/* Table with sticky header */}
       <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-        {filtered.length === 0 ? (
+        {items.length === 0 && !isLoadingMore ? (
           <div className="py-16 text-center text-gray-400">
             <div className="mb-3 text-5xl">📦</div>
             <p className="font-semibold text-gray-500">
-              {search ? 'Sin resultados' : 'Sin materiales todavia'}
+              {search ? 'Sin resultados' : 'Sin materiales todavía'}
             </p>
             {!search && (
-              <p className="mt-1 text-sm">Hace clic en &quot;Agregar Material&quot; para empezar.</p>
+              <p className="mt-1 text-sm">Hacé clic en &quot;Agregar Material&quot; para empezar.</p>
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b border-gray-100 bg-gray-50">
+          /* Scrollable container — thead is sticky within this div */
+          <div className="overflow-auto max-h-[620px]">
+            <table className="w-full min-w-[560px] text-sm">
+              <thead className="sticky top-0 z-10 border-b border-gray-100 bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left font-semibold text-gray-600">Material</th>
                   <th className="px-4 py-3 text-left font-semibold text-gray-600">Proveedor</th>
@@ -180,7 +276,7 @@ export default function MaterialesClient({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filtered.map(m => (
+                {items.map(m => (
                   <tr key={m.id} className="transition-colors hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium text-gray-900">{m.nombre}</td>
                     <td className="px-4 py-3 text-gray-500">{m.proveedor?.nombre ?? 'Sin proveedor'}</td>
@@ -212,12 +308,32 @@ export default function MaterialesClient({
                     </td>
                   </tr>
                 ))}
+
+                {/* Sentinel row — observed by IntersectionObserver */}
+                <tr ref={sentinelRef}>
+                  <td colSpan={5} className="px-4 py-3 text-center">
+                    {isLoadingMore ? (
+                      <span className="inline-flex items-center gap-2 text-xs text-gray-400">
+                        <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+                        </svg>
+                        Cargando más...
+                      </span>
+                    ) : !hasMore ? (
+                      <span className="text-xs text-gray-300">
+                        {items.length} de {total} materiales
+                      </span>
+                    ) : null}
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
         )}
       </div>
 
+      {/* Modal */}
       <Modal
         open={modalOpen}
         onClose={closeModal}
@@ -261,14 +377,14 @@ export default function MaterialesClient({
                   >
                     Sin proveedor
                   </button>
-                  {filteredProveedorOptions.map(proveedor => (
+                  {filteredProveedorOptions.map(p => (
                     <button
-                      key={proveedor.id}
+                      key={p.id}
                       type="button"
-                      onClick={() => handleProveedorSelect(proveedor.id, proveedor.label)}
+                      onClick={() => handleProveedorSelect(p.id, p.label)}
                       className="block w-full px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-violet-50 hover:text-violet-700"
                     >
-                      {proveedor.label}
+                      {p.label}
                     </button>
                   ))}
                   {proveedorQuery.trim() !== '' && filteredProveedorOptions.length === 0 && (

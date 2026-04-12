@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import type { Unidad } from '@/types'
+import type { Material, Unidad } from '@/types'
 
 async function recalculateProductsForMaterial(userId: string, materialId: number) {
   const supabase = await createClient()
@@ -41,6 +41,25 @@ export async function getMateriales() {
     .order('nombre')
   if (error) throw new Error(error.message)
   return data
+}
+
+export async function getMaterialesPage(offset: number, limit: number, search?: string) {
+  const supabase = await createClient()
+
+  let query = supabase
+    .from('materiales')
+    .select('*, proveedor:proveedores(id, user_id, nombre, created_at)', { count: 'exact' })
+    .order('nombre')
+    .range(offset, offset + limit - 1)
+
+  if (search) {
+    query = query.or(`nombre.ilike.%${search}%,unidad.ilike.%${search}%`)
+  }
+
+  const { data, count, error } = await query
+  if (error) throw new Error(error.message)
+
+  return { materiales: (data ?? []) as Material[], total: count ?? 0 }
 }
 
 export async function createMaterial(formData: FormData) {
