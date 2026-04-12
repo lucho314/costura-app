@@ -1,10 +1,12 @@
 'use client'
 
-import { useCallback, useState, useTransition } from 'react'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import Modal from '@/components/ui/modal'
 import Toast from '@/components/ui/toast'
-import { createProveedor, deleteProveedor, updateProveedor } from '@/lib/actions/proveedores'
+import { createProveedor, deleteProveedor, getProveedoresPage, updateProveedor } from '@/lib/actions/proveedores'
 import type { Proveedor } from '@/types'
+
+const PAGE_SIZE = 10
 
 interface ToastState {
   message: string
@@ -80,20 +82,114 @@ function IconTrash() {
   )
 }
 
-export default function ProveedoresClient({ proveedores }: { proveedores: Proveedor[] }) {
+export default function ProveedoresClient({
+  initialProveedores,
+  initialTotal,
+}: {
+  initialProveedores: Proveedor[]
+  initialTotal: number
+}) {
+  const [items, setItems] = useState(initialProveedores)
+  const [total, setTotal] = useState(initialTotal)
+  const [search, setSearch] = useState('')
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+
+  // Refs to avoid stale closures inside callbacks
+  const searchRef = useRef('')
+  const offsetRef = useRef(initialProveedores.length)
+  const totalRef = useRef(initialTotal)
+  const isLoadingRef = useRef(false)
+  const sentinelRef = useRef<HTMLDivElement>(null)
+  const isFirstSearchRender = useRef(true)
+
+  // Keep totalRef in sync with state
+  useEffect(() => { totalRef.current = total }, [total])
+
+  // Modal / form state
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Proveedor | null>(null)
   const [error, setError] = useState('')
   const [toast, setToast] = useState<ToastState | null>(null)
-  const [search, setSearch] = useState('')
   const [isPending, startTransition] = useTransition()
 
-  const filtered = proveedores.filter(proveedor =>
-    proveedor.nombre.toLowerCase().includes(search.toLowerCase()) ||
-    (proveedor.direccion ?? '').toLowerCase().includes(search.toLowerCase()) ||
-    (proveedor.telefono ?? '').toLowerCase().includes(search.toLowerCase()) ||
-    (proveedor.pagina ?? '').toLowerCase().includes(search.toLowerCase())
-  )
+  // ── Data fetching ──────────────────────────────────────────
+
+  const refreshList = useCallback(async () => {
+    if (isLoadingRef.current) return
+    isLoadingRef.current = true
+    setIsLoadingMore(true)
+    try {
+      const { proveedores: fresh, total: newTotal } = await getProveedoresPage(
+        0, PAGE_SIZE, searchRef.current || undefined
+      )
+      setItems(fresh)
+      totalRef.current = newTotal
+      setTotal(newTotal)
+      offsetRef.current = fresh.length
+    } finally {
+      isLoadingRef.current = false
+      setIsLoadingMore(false)
+    }
+  }, [])
+
+  const loadMore = useCallback(async () => {
+    if (isLoadingRef.current || offsetRef.current >= totalRef.current) return
+    isLoadingRef.current = true
+    setIsLoadingMore(true)
+    try {
+      const { proveedores: next, total: newTotal } = await getProveedoresPage(
+        offsetRef.current, PAGE_SIZE, searchRef.current || undefined
+      )
+      setItems(prev => [...prev, ...next])
+      totalRef.current = newTotal
+      setTotal(newTotal)
+      offsetRef.current += next.length
+    } finally {
+      isLoadingRef.current = false
+      setIsLoadingMore(false)
+    }
+  }, [])
+
+  // Debounced search — resets list on each keystroke after first render
+  useEffect(() => {
+    if (isFirstSearchRender.current) {
+      isFirstSearchRender.current = false
+      return
+    }
+    const t = setTimeout(async () => {
+      if (isLoadingRef.current) return
+      searchRef.current = search
+      isLoadingRef.current = true
+      setIsLoadingMore(true)
+      try {
+        const { proveedores: fresh, total: newTotal } = await getProveedoresPage(
+          0, PAGE_SIZE, search || undefined
+        )
+        setItems(fresh)
+        totalRef.current = newTotal
+        setTotal(newTotal)
+        offsetRef.current = fresh.length
+      } finally {
+        isLoadingRef.current = false
+        setIsLoadingMore(false)
+      }
+    }, 300)
+    return () => clearTimeout(t)
+  }, [search])
+
+  // IntersectionObserver — triggers loadMore when sentinel comes into view
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      entries => { if (entries[0].isIntersecting) loadMore() },
+      { rootMargin: '200px' }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [loadMore])
+
+  // ── Modal helpers ──────────────────────────────────────────
 
   function openAdd() {
     setEditing(null)
@@ -128,6 +224,7 @@ export default function ProveedoresClient({ proveedores }: { proveedores: Provee
       } else {
         closeModal()
         setToast({ message: editing ? 'Proveedor actualizado' : 'Proveedor agregado', type: 'success' })
+        await refreshList()
       }
     })
   }
@@ -141,11 +238,16 @@ export default function ProveedoresClient({ proveedores }: { proveedores: Provee
         setToast({ message: res.error, type: 'error' })
       } else {
         setToast({ message: 'Proveedor eliminado', type: 'success' })
+        await refreshList()
       }
     })
   }
 
   const clearToast = useCallback(() => setToast(null), [])
+
+  const hasMore = items.length < total
+
+  // ── Render ─────────────────────────────────────────────────
 
   return (
     <>
@@ -154,7 +256,7 @@ export default function ProveedoresClient({ proveedores }: { proveedores: Provee
         <div>
           <h2 className="text-xl font-bold text-gray-900">Proveedores</h2>
           <p className="text-sm text-gray-500">
-            {proveedores.length} proveedor{proveedores.length !== 1 ? 'es' : ''} registrado{proveedores.length !== 1 ? 's' : ''}
+            {total} proveedor{total !== 1 ? 'es' : ''} registrado{total !== 1 ? 's' : ''}
           </p>
         </div>
         <button
@@ -182,7 +284,7 @@ export default function ProveedoresClient({ proveedores }: { proveedores: Provee
       </div>
 
       {/* Cards grid */}
-      {filtered.length === 0 ? (
+      {items.length === 0 && !isLoadingMore ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-gray-100 bg-white py-20 text-center shadow-sm">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-50">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -205,78 +307,98 @@ export default function ProveedoresClient({ proveedores }: { proveedores: Provee
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {filtered.map(proveedor => (
-            <div
-              key={proveedor.id}
-              className="relative rounded-2xl border border-transparent bg-white p-5 shadow-sm transition-all hover:border-violet-200 hover:shadow-md"
-            >
-              {/* Action buttons */}
-              <div className="absolute right-4 top-4 flex gap-1">
-                {proveedor.google_maps_url && (
-                  <a
-                    href={proveedor.google_maps_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    title="Ver en Google Maps"
-                    className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-green-50 hover:text-green-600"
-                  >
-                    <IconMaps />
-                  </a>
-                )}
-                <button
-                  onClick={() => openEdit(proveedor)}
-                  title="Editar"
-                  className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-violet-50 hover:text-violet-600"
-                >
-                  <IconEdit />
-                </button>
-                <button
-                  onClick={() => handleDelete(proveedor)}
-                  title="Eliminar"
-                  className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
-                >
-                  <IconTrash />
-                </button>
-              </div>
-
-              {/* Avatar + name */}
-              <div className="mb-4 flex items-center gap-3">
-                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${avatarColor(proveedor.id)} text-sm font-bold text-white shadow-sm`}>
-                  {getInitials(proveedor.nombre)}
-                </div>
-                <div className="min-w-0 pr-12">
-                  <p className="truncate font-semibold text-gray-900">{proveedor.nombre}</p>
-                </div>
-              </div>
-
-              {/* Details */}
-              <div className="space-y-2 text-sm text-gray-500">
-                <div className="flex items-start gap-2">
-                  <span className="mt-0.5 text-violet-400"><IconPin /></span>
-                  <span className="line-clamp-2">{proveedor.direccion ?? 'Sin dirección'}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-violet-400"><IconPhone /></span>
-                  <span>{proveedor.telefono ?? 'Sin teléfono'}</span>
-                </div>
-                {proveedor.pagina ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-violet-400"><IconLink /></span>
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {items.map(proveedor => (
+              <div
+                key={proveedor.id}
+                className="relative rounded-2xl border border-transparent bg-white p-5 shadow-sm transition-all hover:border-violet-200 hover:shadow-md"
+              >
+                {/* Action buttons */}
+                <div className="absolute right-4 top-4 flex gap-1">
+                  {proveedor.google_maps_url && (
                     <a
-                      href={proveedor.pagina}
+                      href={proveedor.google_maps_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="truncate text-violet-600 hover:underline"
+                      title="Ver en Google Maps"
+                      className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-green-50 hover:text-green-600"
                     >
-                      {proveedor.pagina.replace(/^https?:\/\//, '')}
+                      <IconMaps />
                     </a>
+                  )}
+                  <button
+                    onClick={() => openEdit(proveedor)}
+                    title="Editar"
+                    className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-violet-50 hover:text-violet-600"
+                  >
+                    <IconEdit />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(proveedor)}
+                    title="Eliminar"
+                    className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                  >
+                    <IconTrash />
+                  </button>
+                </div>
+
+                {/* Avatar + name */}
+                <div className="mb-4 flex items-center gap-3">
+                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${avatarColor(proveedor.id)} text-sm font-bold text-white shadow-sm`}>
+                    {getInitials(proveedor.nombre)}
                   </div>
-                ) : null}
+                  <div className="min-w-0 pr-12">
+                    <p className="truncate font-semibold text-gray-900">{proveedor.nombre}</p>
+                  </div>
+                </div>
+
+                {/* Details */}
+                <div className="space-y-2 text-sm text-gray-500">
+                  <div className="flex items-start gap-2">
+                    <span className="mt-0.5 text-violet-400"><IconPin /></span>
+                    <span className="line-clamp-2">{proveedor.direccion ?? 'Sin dirección'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-violet-400"><IconPhone /></span>
+                    <span>{proveedor.telefono ?? 'Sin teléfono'}</span>
+                  </div>
+                  {proveedor.pagina ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-violet-400"><IconLink /></span>
+                      <a
+                        href={proveedor.pagina}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="truncate text-violet-600 hover:underline"
+                      >
+                        {proveedor.pagina.replace(/^https?:\/\//, '')}
+                      </a>
+                    </div>
+                  ) : null}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+
+          {/* Sentinel + loading indicator */}
+          <div ref={sentinelRef} className="mt-4 flex justify-center py-4">
+            {isLoadingMore && (
+              <div className="flex items-center gap-2 text-sm text-gray-400">
+                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+                </svg>
+                Cargando más...
+              </div>
+            )}
+            {!isLoadingMore && !hasMore && items.length > 0 && (
+              <p className="text-xs text-gray-300">
+                {items.length} de {total} proveedores
+              </p>
+            )}
+          </div>
+        </>
       )}
 
       {/* Modal */}

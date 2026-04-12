@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import type { Proveedor } from '@/types'
 
 export async function getProveedores() {
   const supabase = await createClient()
@@ -12,6 +13,25 @@ export async function getProveedores() {
 
   if (error) throw new Error(error.message)
   return data
+}
+
+export async function getProveedoresPage(offset: number, limit: number, search?: string) {
+  const supabase = await createClient()
+
+  let query = supabase
+    .from('proveedores')
+    .select('*', { count: 'exact' })
+    .order('nombre')
+    .range(offset, offset + limit - 1)
+
+  if (search) {
+    query = query.ilike('nombre', `%${search}%`)
+  }
+
+  const { data, count, error } = await query
+  if (error) throw new Error(error.message)
+
+  return { proveedores: (data ?? []) as Proveedor[], total: count ?? 0 }
 }
 
 export async function createProveedor(formData: FormData) {

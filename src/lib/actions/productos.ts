@@ -114,6 +114,34 @@ export async function saveProducto(input: SaveProductoInput) {
   return { success: true, id: producto.id }
 }
 
+export async function getProductosPage(offset: number, limit: number, search?: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { productos: [] as Producto[], total: 0 }
+
+  let query = supabase
+    .from('productos')
+    .select(`
+      *,
+      producto_imagenes (
+        id, producto_id, user_id, object_key, url, orden, alt, created_at
+      )
+    `, { count: 'exact' })
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1)
+
+  if (search) {
+    query = query.ilike('nombre', `%${search}%`)
+  }
+
+  const { data, count } = await query
+  return {
+    productos: (data ?? []).map(p => normalizeProducto(p as Producto)),
+    total: count ?? 0,
+  }
+}
+
 export async function getProductos(search?: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -143,6 +171,20 @@ export async function getProductos(search?: string) {
 
   const { data } = await query
   return (data ?? []).map(producto => normalizeProducto(producto as Producto))
+}
+
+export async function getProductosParaMovimientos() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data } = await supabase
+    .from('productos')
+    .select('id, user_id, nombre, costo_materiales, horas_mo, valor_hora, costo_mo, gastos_generales, costo_total, margen, precio_venta, stock, created_at')
+    .eq('user_id', user.id)
+    .order('nombre')
+
+  return (data ?? []) as Producto[]
 }
 
 export async function getProductoDetalle(id: number) {

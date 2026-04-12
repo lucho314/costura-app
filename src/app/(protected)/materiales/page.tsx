@@ -1,12 +1,12 @@
 import { getProveedores } from '@/lib/actions/proveedores'
-import { getMateriales } from '@/lib/actions/materiales'
+import { getMaterialesPage } from '@/lib/actions/materiales'
 import MaterialesClient from '@/components/materiales/materiales-client'
 
 export default async function MaterialesPage() {
-  const [materiales, proveedores] = await Promise.all([
-    getMateriales(),
+  const [{ materiales, total }, proveedores] = await Promise.all([
+    getMaterialesPage(0, 15),
     getProveedores(),
   ])
 
-  return <MaterialesClient materiales={materiales} proveedores={proveedores} />
+  return <MaterialesClient initialMateriales={materiales} initialTotal={total} proveedores={proveedores} />
 }

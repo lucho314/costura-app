@@ -133,6 +133,8 @@ export interface EstadisticasMovimientos {
   totalVentas: number
   totalProduccion: number
   totalAjustes: number
+  totalIngresos: number
+  totalGanancias: number
   ventasPorMes: Array<{
     mes: string
     cantidad: number
