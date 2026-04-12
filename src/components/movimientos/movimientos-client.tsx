@@ -113,11 +113,7 @@ export default function MovimientosClient({
             <div>
               <p className="text-xs uppercase tracking-wide text-gray-500">Ingresos</p>
               <p className="text-2xl font-extrabold text-gray-900">
-                {fmoney(
-                  movimientos
-                    .filter(m => m.tipo === 'venta')
-                    .reduce((sum, m) => sum + (m.precio_venta || 0), 0)
-                )}
+                {fmoney(estadisticas.totalIngresos)}
               </p>
             </div>
           </div>
@@ -133,11 +129,7 @@ export default function MovimientosClient({
             <div>
               <p className="text-xs uppercase tracking-wide text-gray-500">Ganancias</p>
               <p className="text-2xl font-extrabold text-gray-900">
-                {fmoney(
-                  movimientos
-                    .filter(m => m.tipo === 'venta')
-                    .reduce((sum, m) => sum + (m.ganancia_real || 0), 0)
-                )}
+                {fmoney(estadisticas.totalGanancias)}
               </p>
             </div>
           </div>

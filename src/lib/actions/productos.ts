@@ -145,6 +145,20 @@ export async function getProductos(search?: string) {
   return (data ?? []).map(producto => normalizeProducto(producto as Producto))
 }
 
+export async function getProductosParaMovimientos() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data } = await supabase
+    .from('productos')
+    .select('id, user_id, nombre, costo_materiales, horas_mo, valor_hora, costo_mo, gastos_generales, costo_total, margen, precio_venta, stock, created_at')
+    .eq('user_id', user.id)
+    .order('nombre')
+
+  return (data ?? []) as Producto[]
+}
+
 export async function getProductoDetalle(id: number) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

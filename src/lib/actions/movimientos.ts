@@ -130,7 +130,7 @@ export async function getMovimientos(filtros?: MovimientosFiltros) {
     query = query.lte('created_at', filtros.hasta)
   }
 
-  const { data, error } = await query
+  const { data, error } = await query.limit(200)
 
   if (error) {
     console.error('Error fetching movimientos:', error)
@@ -146,98 +146,23 @@ export async function getMovimientos(filtros?: MovimientosFiltros) {
 export async function getEstadisticas(): Promise<EstadisticasMovimientos> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    return {
-      totalVentas: 0,
-      totalProduccion: 0,
-      totalAjustes: 0,
-      ventasPorMes: [],
-      productosMasVendidos: [],
-    }
+
+  const empty: EstadisticasMovimientos = {
+    totalVentas: 0,
+    totalProduccion: 0,
+    totalAjustes: 0,
+    totalIngresos: 0,
+    totalGanancias: 0,
+    ventasPorMes: [],
+    productosMasVendidos: [],
   }
 
-  // Obtener todos los movimientos
-  const { data: movimientos } = await supabase
-    .from('movimientos_stock')
-    .select('*, producto:productos(nombre)')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+  if (!user) return empty
 
-  if (!movimientos) {
-    return {
-      totalVentas: 0,
-      totalProduccion: 0,
-      totalAjustes: 0,
-      ventasPorMes: [],
-      productosMasVendidos: [],
-    }
-  }
+  const { data, error } = await supabase.rpc('get_estadisticas', { p_user_id: user.id })
+  if (error || !data) return empty
 
-  // Calcular totales
-  const totalVentas = movimientos
-    .filter(m => m.tipo === 'venta')
-    .reduce((sum, m) => sum + m.cantidad, 0)
-  
-  const totalProduccion = movimientos
-    .filter(m => m.tipo === 'produccion')
-    .reduce((sum, m) => sum + m.cantidad, 0)
-  
-  const totalAjustes = movimientos
-    .filter(m => m.tipo === 'ajuste')
-    .reduce((sum, m) => sum + m.cantidad, 0)
-
-  // Ventas por mes
-  const ventasPorMesMap = new Map<string, { cantidad: number; ingresos: number; ganancias: number }>()
-  
-  movimientos
-    .filter(m => m.tipo === 'venta')
-    .forEach(m => {
-      const mes = m.created_at.substring(0, 7) // "2026-04"
-      const existing = ventasPorMesMap.get(mes) || { cantidad: 0, ingresos: 0, ganancias: 0 }
-      
-      ventasPorMesMap.set(mes, {
-        cantidad: existing.cantidad + m.cantidad,
-        ingresos: existing.ingresos + (m.precio_venta || 0),
-        ganancias: existing.ganancias + (m.ganancia_real || 0),
-      })
-    })
-
-  const ventasPorMes = Array.from(ventasPorMesMap.entries())
-    .map(([mes, datos]) => ({ mes, ...datos }))
-    .sort((a, b) => b.mes.localeCompare(a.mes))
-
-  // Productos más vendidos
-  const productosMasVendidosMap = new Map<number, { nombre: string; cantidad_vendida: number; ingresos: number }>()
-  
-  movimientos
-    .filter(m => m.tipo === 'venta' && m.producto)
-    .forEach(m => {
-      const existing = productosMasVendidosMap.get(m.producto_id) || {
-        nombre: m.producto?.nombre || '',
-        cantidad_vendida: 0,
-        ingresos: 0,
-      }
-      
-      productosMasVendidosMap.set(m.producto_id, {
-        nombre: existing.nombre || m.producto?.nombre || '',
-        cantidad_vendida: existing.cantidad_vendida + m.cantidad,
-        ingresos: existing.ingresos + (m.precio_venta || 0),
-      })
-    })
-
-  const productosMasVendidos = Array.from(productosMasVendidosMap.entries())
-    .map(([producto_id, datos]) => ({ producto_id, ...datos }))
-    .sort((a, b) => b.cantidad_vendida - a.cantidad_vendida)
-    .slice(0, 10) // Top 10
-
-  return {
-    totalVentas,
-    totalProduccion,
-    totalAjustes,
-    ventasPorMes,
-    productosMasVendidos,
-  }
+  return data as EstadisticasMovimientos
 }
 
 // ========================================
