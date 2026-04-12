@@ -2,11 +2,12 @@
 
 import { refresh, revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import type { 
-  RegistrarMovimientoInput, 
-  MovimientosFiltros, 
+import type {
+  RegistrarMovimientoInput,
+  MovimientosFiltros,
   MovimientoStock,
-  EstadisticasMovimientos 
+  EstadisticasMovimientos,
+  TipoMovimiento,
 } from '@/types'
 
 // ========================================
@@ -100,44 +101,39 @@ export async function registrarMovimiento(input: RegistrarMovimientoInput) {
 }
 
 // ========================================
-// 2. OBTENER MOVIMIENTOS (con filtros opcionales)
+// 2. OBTENER MOVIMIENTOS (paginado)
 // ========================================
-export async function getMovimientos(filtros?: MovimientosFiltros) {
+export async function getMovimientosPage(
+  offset: number,
+  limit: number,
+  tipo?: TipoMovimiento | ''
+) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return []
+  if (!user) return { movimientos: [] as MovimientoStock[], total: 0 }
 
   let query = supabase
     .from('movimientos_stock')
     .select(`
       *,
       producto:productos(id, nombre, precio_venta, costo_total, producto_imagenes(url, orden))
-    `)
+    `, { count: 'exact' })
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1)
 
-  // Aplicar filtros
-  if (filtros?.productoId) {
-    query = query.eq('producto_id', filtros.productoId)
-  }
-  if (filtros?.tipo) {
-    query = query.eq('tipo', filtros.tipo)
-  }
-  if (filtros?.desde) {
-    query = query.gte('created_at', filtros.desde)
-  }
-  if (filtros?.hasta) {
-    query = query.lte('created_at', filtros.hasta)
+  if (tipo) {
+    query = query.eq('tipo', tipo)
   }
 
-  const { data, error } = await query.limit(200)
+  const { data, count, error } = await query
 
   if (error) {
     console.error('Error fetching movimientos:', error)
-    return []
+    return { movimientos: [] as MovimientoStock[], total: 0 }
   }
 
-  return data as MovimientoStock[]
+  return { movimientos: data as MovimientoStock[], total: count ?? 0 }
 }
 
 // ========================================

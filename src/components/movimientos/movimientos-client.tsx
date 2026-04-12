@@ -1,9 +1,12 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import Toast from '@/components/ui/toast'
 import MovimientoForm from './movimiento-form'
+import { getMovimientosPage } from '@/lib/actions/movimientos'
 import type { MovimientoStock, Producto, EstadisticasMovimientos, TipoMovimiento } from '@/types'
+
+const PAGE_SIZE = 30
 
 interface ToastState {
   message: string
@@ -28,31 +31,115 @@ function formatDate(dateString: string) {
 }
 
 export default function MovimientosClient({
-  movimientos,
+  initialMovimientos,
+  initialTotal,
   estadisticas,
   productos,
 }: {
-  movimientos: MovimientoStock[]
+  initialMovimientos: MovimientoStock[]
+  initialTotal: number
   estadisticas: EstadisticasMovimientos
   productos: Producto[]
 }) {
-  const [modalOpen, setModalOpen] = useState(false)
-  const [toast, setToast] = useState<ToastState | null>(null)
+  const [items, setItems] = useState(initialMovimientos)
+  const [total, setTotal] = useState(initialTotal)
   const [search, setSearch] = useState('')
   const [filtroTipo, setFiltroTipo] = useState<TipoMovimiento | ''>('')
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [toast, setToast] = useState<ToastState | null>(null)
+  const [, startTransition] = useTransition()
 
-  const filtered = movimientos.filter(m => {
-    const matchesSearch = m.producto?.nombre?.toLowerCase().includes(search.toLowerCase()) ||
-      m.notas?.toLowerCase().includes(search.toLowerCase())
-    const matchesTipo = filtroTipo === '' || m.tipo === filtroTipo
-    return matchesSearch && matchesTipo
+  // Refs to avoid stale closures
+  const tipoRef = useRef<TipoMovimiento | ''>('')
+  const offsetRef = useRef(initialMovimientos.length)
+  const totalRef = useRef(initialTotal)
+  const isLoadingRef = useRef(false)
+  const sentinelRef = useRef<HTMLTableRowElement>(null)
+  const isFirstRender = useRef(true)
+
+  useEffect(() => { totalRef.current = total }, [total])
+
+  // ── Data fetching ──────────────────────────────────────────
+
+  const loadMore = useCallback(async () => {
+    if (isLoadingRef.current || offsetRef.current >= totalRef.current) return
+    isLoadingRef.current = true
+    setIsLoadingMore(true)
+    try {
+      const { movimientos: next, total: newTotal } = await getMovimientosPage(
+        offsetRef.current, PAGE_SIZE, tipoRef.current || undefined
+      )
+      setItems(prev => [...prev, ...next])
+      totalRef.current = newTotal
+      setTotal(newTotal)
+      offsetRef.current += next.length
+    } finally {
+      isLoadingRef.current = false
+      setIsLoadingMore(false)
+    }
+  }, [])
+
+  const refreshList = useCallback(async (tipo: TipoMovimiento | '') => {
+    if (isLoadingRef.current) return
+    tipoRef.current = tipo
+    offsetRef.current = 0
+    isLoadingRef.current = true
+    setIsLoadingMore(true)
+    try {
+      const { movimientos: fresh, total: newTotal } = await getMovimientosPage(
+        0, PAGE_SIZE, tipo || undefined
+      )
+      setItems(fresh)
+      totalRef.current = newTotal
+      setTotal(newTotal)
+      offsetRef.current = fresh.length
+    } finally {
+      isLoadingRef.current = false
+      setIsLoadingMore(false)
+    }
+  }, [])
+
+  // Tipo filter changes → reload from server
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    startTransition(() => { refreshList(filtroTipo) })
+  }, [filtroTipo, refreshList])
+
+  // IntersectionObserver sentinel
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      entries => { if (entries[0].isIntersecting) loadMore() },
+      { rootMargin: '100px' }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [loadMore])
+
+  // Client-side text filter on loaded items
+  const filtered = items.filter(m => {
+    if (!search) return true
+    const q = search.toLowerCase()
+    return (
+      m.producto?.nombre?.toLowerCase().includes(q) ||
+      (m.notas ?? '').toLowerCase().includes(q)
+    )
   })
 
+  const hasMore = items.length < total
   const clearToast = useCallback(() => setToast(null), [])
 
   function handleSuccess(message: string) {
     setToast({ message, type: 'success' })
+    refreshList(tipoRef.current)
   }
+
+  // ── Render ─────────────────────────────────────────────────
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -144,7 +231,7 @@ export default function MovimientosClient({
             {estadisticas.productosMasVendidos.slice(0, 5).map((item, index) => {
               const maxVentas = estadisticas.productosMasVendidos[0].cantidad_vendida
               const percentage = (item.cantidad_vendida / maxVentas) * 100
-              
+
               return (
                 <div key={item.producto_id} className="flex items-center gap-3">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-50 text-sm font-bold text-violet-700">
@@ -172,8 +259,8 @@ export default function MovimientosClient({
       )}
 
       {/* Historial */}
-      <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-        <div className="mb-4">
+      <div className="rounded-2xl border border-gray-100 bg-white shadow-sm">
+        <div className="p-5 pb-4">
           <h2 className="mb-3 font-bold text-gray-800">Historial de movimientos</h2>
           <div className="flex flex-col gap-3 sm:flex-row">
             <input
@@ -196,95 +283,100 @@ export default function MovimientosClient({
           </div>
         </div>
 
-        {filtered.length === 0 ? (
+        {items.length === 0 && !isLoadingMore ? (
           <p className="py-8 text-center text-sm text-gray-400">
-            {movimientos.length === 0
-              ? 'Todavía no hay movimientos registrados.'
-              : 'No se encontraron movimientos con los filtros aplicados.'}
+            {filtroTipo
+              ? 'No hay movimientos de ese tipo todavía.'
+              : 'Todavía no hay movimientos registrados.'}
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b border-gray-100 bg-gray-50">
+          /* Scrollable container with sticky header */
+          <div className="overflow-auto max-h-[560px]">
+            <table className="w-full min-w-[720px] text-sm">
+              <thead className="sticky top-0 z-10 border-b border-gray-100 bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Fecha
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Producto
-                  </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Tipo
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Cantidad
-                  </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Stock
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Precio/Ganancia
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Notas
-                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Fecha</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Producto</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Tipo</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Cantidad</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">Stock</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Precio/Ganancia</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Notas</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filtered.map(m => (
-                  <tr key={m.id} className="transition-colors hover:bg-gray-50">
-                    <td className="px-4 py-3 text-gray-600">
-                      {formatDate(m.created_at)}
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-sm text-gray-400">
+                      No se encontraron movimientos con ese filtro.
                     </td>
-                    <td className="px-4 py-3 font-medium text-gray-900">
-                      {m.producto?.nombre || 'Producto eliminado'}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span
-                        className={`inline-block rounded-lg px-2 py-1 text-xs font-semibold ${
+                  </tr>
+                ) : (
+                  filtered.map(m => (
+                    <tr key={m.id} className="transition-colors hover:bg-gray-50">
+                      <td className="px-4 py-3 text-gray-600">{formatDate(m.created_at)}</td>
+                      <td className="px-4 py-3 font-medium text-gray-900">
+                        {m.producto?.nombre || 'Producto eliminado'}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`inline-block rounded-lg px-2 py-1 text-xs font-semibold ${
                           m.tipo === 'venta'
                             ? 'bg-red-50 text-red-700'
                             : m.tipo === 'produccion'
                               ? 'bg-green-50 text-green-700'
                               : 'bg-yellow-50 text-yellow-700'
-                        }`}
-                      >
-                        {m.tipo === 'venta' ? 'Venta' : m.tipo === 'produccion' ? 'Producción' : 'Ajuste'}
+                        }`}>
+                          {m.tipo === 'venta' ? 'Venta' : m.tipo === 'produccion' ? 'Producción' : 'Ajuste'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono font-semibold text-gray-900">
+                        {m.tipo === 'venta' ? `-${m.cantidad}` : `+${m.cantidad}`}
+                      </td>
+                      <td className="px-4 py-3 text-center font-mono text-gray-600">
+                        <span className="text-gray-400">{m.stock_anterior}</span>
+                        {' → '}
+                        <span className="font-semibold text-gray-900">{m.stock_nuevo}</span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {m.tipo === 'venta' && m.precio_venta !== null ? (
+                          <div>
+                            <div className="font-mono font-semibold text-gray-900">{fmoney(m.precio_venta)}</div>
+                            <div className={`text-xs font-mono ${(m.ganancia_real || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {fmoney(m.ganancia_real || 0)}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-gray-500">
+                        {m.notas
+                          ? <span className="line-clamp-2">{m.notas}</span>
+                          : <span className="text-gray-300">-</span>
+                        }
+                      </td>
+                    </tr>
+                  ))
+                )}
+
+                {/* Sentinel row */}
+                <tr ref={sentinelRef}>
+                  <td colSpan={7} className="px-4 py-3 text-center">
+                    {isLoadingMore ? (
+                      <span className="inline-flex items-center gap-2 text-xs text-gray-400">
+                        <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+                        </svg>
+                        Cargando más...
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-right font-mono font-semibold text-gray-900">
-                      {m.tipo === 'venta' ? `-${m.cantidad}` : `+${m.cantidad}`}
-                    </td>
-                    <td className="px-4 py-3 text-center font-mono text-gray-600">
-                      <span className="text-gray-400">{m.stock_anterior}</span>
-                      {' → '}
-                      <span className="font-semibold text-gray-900">{m.stock_nuevo}</span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {m.tipo === 'venta' && m.precio_venta !== null ? (
-                        <div>
-                          <div className="font-mono font-semibold text-gray-900">
-                            {fmoney(m.precio_venta)}
-                          </div>
-                          <div className={`text-xs font-mono ${
-                            (m.ganancia_real || 0) >= 0 ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {fmoney(m.ganancia_real || 0)}
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-gray-500">
-                      {m.notas ? (
-                        <span className="line-clamp-2">{m.notas}</span>
-                      ) : (
-                        <span className="text-gray-300">-</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                    ) : !hasMore ? (
+                      <span className="text-xs text-gray-300">
+                        {items.length} de {total} movimientos
+                      </span>
+                    ) : null}
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
