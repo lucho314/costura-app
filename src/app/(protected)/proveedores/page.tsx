@@ -1,8 +1,8 @@
 import ProveedoresClient from '@/components/proveedores/proveedores-client'
-import { getProveedores } from '@/lib/actions/proveedores'
+import { getProveedoresPage } from '@/lib/actions/proveedores'
 
 export default async function ProveedoresPage() {
-  const proveedores = await getProveedores()
+  const { proveedores, total } = await getProveedoresPage(0, 10)
 
-  return <ProveedoresClient proveedores={proveedores} />
+  return <ProveedoresClient initialProveedores={proveedores} initialTotal={total} />
 }
