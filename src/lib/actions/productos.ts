@@ -114,6 +114,34 @@ export async function saveProducto(input: SaveProductoInput) {
   return { success: true, id: producto.id }
 }
 
+export async function getProductosPage(offset: number, limit: number, search?: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { productos: [] as Producto[], total: 0 }
+
+  let query = supabase
+    .from('productos')
+    .select(`
+      *,
+      producto_imagenes (
+        id, producto_id, user_id, object_key, url, orden, alt, created_at
+      )
+    `, { count: 'exact' })
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1)
+
+  if (search) {
+    query = query.ilike('nombre', `%${search}%`)
+  }
+
+  const { data, count } = await query
+  return {
+    productos: (data ?? []).map(p => normalizeProducto(p as Producto)),
+    total: count ?? 0,
+  }
+}
+
 export async function getProductos(search?: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
