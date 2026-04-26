@@ -266,12 +266,12 @@ export default function MaterialesClient({
           /* Scrollable container — thead is sticky within this div */
           <div className="overflow-auto max-h-[620px]">
             <table className="w-full min-w-[560px] text-sm">
-              <thead className="sticky top-0 z-10 border-b border-gray-100 bg-gray-50">
+               <thead className="sticky top-0 z-10 border-b border-gray-100 bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left font-semibold text-gray-600">Material</th>
                   <th className="px-4 py-3 text-left font-semibold text-gray-600">Proveedor</th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-600">Unidad</th>
                   <th className="px-4 py-3 text-right font-semibold text-gray-600">Precio / Unidad</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-600">Unidad</th>
                   <th className="px-4 py-3 text-center font-semibold text-gray-600">Acciones</th>
                 </tr>
               </thead>
@@ -280,13 +280,13 @@ export default function MaterialesClient({
                   <tr key={m.id} className="transition-colors hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium text-gray-900">{m.nombre}</td>
                     <td className="px-4 py-3 text-gray-500">{m.proveedor?.nombre ?? 'Sin proveedor'}</td>
+                    <td className="px-4 py-3 text-right font-mono font-semibold text-gray-900">
+                      {fmoney(m.precio)}
+                    </td>
                     <td className="px-4 py-3">
                       <span className="inline-block rounded-md bg-violet-50 px-2 py-0.5 text-xs font-mono font-semibold text-violet-700">
                         {m.unidad}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-right font-mono font-semibold text-gray-900">
-                      {fmoney(m.precio)}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-center gap-2">
