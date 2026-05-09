@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { roundSuggestedPrice } from '@/lib/product-pricing'
+import { formatMoney } from '@/lib/format'
 import Modal from '@/components/ui/modal'
 import Toast from '@/components/ui/toast'
 import { updateProductoDetalle } from '@/lib/actions/productos'
@@ -16,13 +17,6 @@ interface ToastState {
 interface EditableItem {
   materialId: number | ''
   cantidad: number
-}
-
-function fmoney(n: number) {
-  return '$ ' + n.toLocaleString('es-AR', {
-    minimumFractionDigits: n % 1 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  })
 }
 
 export default function ProductoDetailEditor({
@@ -196,8 +190,8 @@ export default function ProductoDetailEditor({
                     </div>
 
                     <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
-                      <span>{material ? `Precio unitario: ${fmoney(material.precio)}` : 'Seleccioná un material'}</span>
-                      <span className="font-mono font-semibold text-gray-700">{subtotal > 0 ? `Subtotal: ${fmoney(subtotal)}` : 'Subtotal: -'}</span>
+                      <span>{material ? `Precio unitario: ${formatMoney(material.precio)}` : 'Seleccioná un material'}</span>
+                      <span className="font-mono font-semibold text-gray-700">{subtotal > 0 ? `Subtotal: ${formatMoney(subtotal)}` : 'Subtotal: -'}</span>
                     </div>
                   </div>
                 )
@@ -260,23 +254,23 @@ export default function ProductoDetailEditor({
             <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-gray-500">Costo de materiales</span>
-                <span className="font-mono font-semibold text-gray-900">{fmoney(costoMateriales)}</span>
+                <span className="font-mono font-semibold text-gray-900">{formatMoney(costoMateriales)}</span>
               </div>
               <div className="mt-1 flex items-center justify-between gap-3">
-                <span className="text-gray-500">Mano de obra ({horasMo}h x {fmoney(valorHora)})</span>
-                <span className="font-mono font-semibold text-gray-900">{fmoney(costoMo)}</span>
+                <span className="text-gray-500">Mano de obra ({horasMo}h x {formatMoney(valorHora)})</span>
+                <span className="font-mono font-semibold text-gray-900">{formatMoney(costoMo)}</span>
               </div>
               <div className="mt-1 flex items-center justify-between gap-3">
                 <span className="text-gray-500">Gastos generales</span>
-                <span className="font-mono font-semibold text-gray-900">{fmoney(gastosGenerales)}</span>
+                <span className="font-mono font-semibold text-gray-900">{formatMoney(gastosGenerales)}</span>
               </div>
               <div className="mt-2 flex items-center justify-between gap-3 border-t border-gray-200 pt-2">
                 <span className="font-semibold text-gray-700">Costo total</span>
-                <span className="font-mono font-bold text-gray-900">{fmoney(costoTotal)}</span>
+                <span className="font-mono font-bold text-gray-900">{formatMoney(costoTotal)}</span>
               </div>
               <div className="mt-2 flex items-center justify-between gap-3 border-t border-gray-200 pt-2">
                 <span className="text-gray-500">Precio sugerido automático ({margen}%)</span>
-                <span className="font-mono text-base font-extrabold text-violet-700">{fmoney(precioVenta)}</span>
+                <span className="font-mono text-base font-extrabold text-violet-700">{formatMoney(precioVenta)}</span>
               </div>
             </div>
           </div>

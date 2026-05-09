@@ -6,14 +6,8 @@ import ProductoDetailEditor from '@/components/productos/producto-detail-editor'
 import ProductoImageUploader from '@/components/productos/producto-image-uploader'
 import StockEditor from '@/components/productos/stock-editor'
 import { getProductoDetalle } from '@/lib/actions/productos'
+import { formatLongDate, formatMoney } from '@/lib/format'
 import type { ProductoMaterial } from '@/types'
-
-function fmoney(n: number) {
-  return '$ ' + n.toLocaleString('es-AR', {
-    minimumFractionDigits: n % 1 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  })
-}
 
 export default async function ProductoDetallePage({
   params,
@@ -44,7 +38,7 @@ export default async function ProductoDetallePage({
         <div className="flex flex-wrap items-center gap-4">
           <div>
             <p className="text-xs text-white/60">Precio de venta</p>
-            <p className="text-3xl font-extrabold">{fmoney(producto.precio_venta)}</p>
+            <p className="text-3xl font-extrabold">{formatMoney(producto.precio_venta)}</p>
           </div>
           <div className="ml-auto text-right">
             <p className="mb-1 text-xs text-white/60">Stock actual</p>
@@ -109,8 +103,8 @@ export default async function ProductoDetallePage({
                       </span>
                     </td>
                     <td className="px-2 py-2.5 text-right font-mono text-gray-700">{item.cantidad}</td>
-                    <td className="px-2 py-2.5 text-right font-mono text-gray-500">{fmoney(item.precio_unitario)}</td>
-                    <td className="py-2.5 pl-2 text-right font-mono font-semibold text-gray-900">{fmoney(item.subtotal)}</td>
+                    <td className="px-2 py-2.5 text-right font-mono text-gray-500">{formatMoney(item.precio_unitario)}</td>
+                    <td className="py-2.5 pl-2 text-right font-mono font-semibold text-gray-900">{formatMoney(item.subtotal)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -123,9 +117,9 @@ export default async function ProductoDetallePage({
         <h2 className="mb-4 font-bold text-gray-800">Desglose de costos</h2>
         <div className="space-y-2 text-sm">
           {[
-            { label: 'Materiales', value: fmoney(producto.costo_materiales) },
-            { label: `Mano de obra (${producto.horas_mo}h x ${fmoney(producto.valor_hora)})`, value: fmoney(producto.costo_mo) },
-            { label: 'Gastos generales', value: fmoney(producto.gastos_generales) },
+            { label: 'Materiales', value: formatMoney(producto.costo_materiales) },
+            { label: `Mano de obra (${producto.horas_mo}h x ${formatMoney(producto.valor_hora)})`, value: formatMoney(producto.costo_mo) },
+            { label: 'Gastos generales', value: formatMoney(producto.gastos_generales) },
           ].map(({ label, value }) => (
             <div key={label} className="flex items-center justify-between border-b border-gray-50 py-2">
               <span className="text-gray-500">{label}</span>
@@ -134,22 +128,22 @@ export default async function ProductoDetallePage({
           ))}
           <div className="flex items-center justify-between border-b-2 border-gray-200 py-2 font-bold">
             <span className="text-gray-900">Costo total</span>
-            <span className="font-mono text-gray-900">{fmoney(producto.costo_total)}</span>
+            <span className="font-mono text-gray-900">{formatMoney(producto.costo_total)}</span>
           </div>
           <div className="flex items-center justify-between border-b border-gray-50 py-2">
             <span className="text-gray-500">Ganancia actual</span>
             <span className="font-mono font-semibold text-green-600">
-              {fmoney(producto.precio_venta - producto.costo_total)}
+              {formatMoney(producto.precio_venta - producto.costo_total)}
             </span>
           </div>
           <div className="mt-2 flex items-center justify-between rounded-xl bg-violet-50 px-3 py-3">
             <span className="font-bold text-violet-800">Precio de venta</span>
-            <span className="text-lg font-mono font-extrabold text-violet-800">{fmoney(producto.precio_venta)}</span>
+            <span className="text-lg font-mono font-extrabold text-violet-800">{formatMoney(producto.precio_venta)}</span>
           </div>
         </div>
 
         <p className="mt-4 text-xs text-gray-400">
-          Creado el {new Date(producto.created_at).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}
+          Creado el {formatLongDate(producto.created_at)}
         </p>
       </div>
     </div>

@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { deleteProducto, getProductosPage } from '@/lib/actions/productos'
+import { formatMoney, formatShortDate } from '@/lib/format'
 import type { Producto } from '@/types'
 import Toast from '@/components/ui/toast'
 
@@ -12,13 +13,6 @@ const PAGE_SIZE = 9
 interface ToastState {
   message: string
   type: 'success' | 'error'
-}
-
-function fmoney(n: number) {
-  return '$ ' + n.toLocaleString('es-AR', {
-    minimumFractionDigits: n % 1 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  })
 }
 
 export default function ProductosClient({
@@ -221,7 +215,7 @@ export default function ProductosClient({
                     <div>
                       <h3 className="truncate font-bold text-gray-900">{p.nombre}</h3>
                       <p className="mt-0.5 text-xs text-gray-400">
-                        {new Date(p.created_at).toLocaleDateString('es-AR')}
+                        {formatShortDate(p.created_at)}
                       </p>
                     </div>
                     <span className={`shrink-0 rounded-lg px-2 py-1 text-xs font-semibold ${
@@ -234,7 +228,7 @@ export default function ProductosClient({
                   <div className="space-y-1 border-t border-gray-100 pt-3 text-sm">
                     <div className="flex justify-between text-gray-500">
                       <span>Costo total</span>
-                      <span className="font-mono">{fmoney(p.costo_total)}</span>
+                      <span className="font-mono">{formatMoney(p.costo_total)}</span>
                     </div>
                     <div className="flex justify-between text-gray-500">
                       <span>Margen</span>
@@ -246,7 +240,7 @@ export default function ProductosClient({
                     </div>
                     <div className="flex justify-between font-bold text-gray-900">
                       <span>Precio venta</span>
-                      <span className="font-mono text-violet-700">{fmoney(p.precio_venta)}</span>
+                      <span className="font-mono text-violet-700">{formatMoney(p.precio_venta)}</span>
                     </div>
                   </div>
 

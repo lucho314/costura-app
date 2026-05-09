@@ -1,8 +1,10 @@
 'use client'
 
-import { useCallback, useState, useTransition } from 'react'
+import { useCallback, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { saveProducto } from '@/lib/actions/productos'
+import { formatMoney } from '@/lib/format'
+import { optimizeImagesForUpload } from '@/lib/image-optimizer'
 import type { CalcItem, Material } from '@/types'
 import Toast from '@/components/ui/toast'
 
@@ -12,13 +14,6 @@ interface ToastState {
 }
 
 const MAX_FILES = 6
-
-function fmoney(n: number) {
-  return '$ ' + n.toLocaleString('es-AR', {
-    minimumFractionDigits: n % 1 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  })
-}
 
 function roundSuggestedPrice(n: number) {
   const hasDecimals = n % 1 !== 0
@@ -40,10 +35,11 @@ export default function CalculadoraClient({ materiales }: { materiales: Material
   const [toast, setToast] = useState<ToastState | null>(null)
   const [saveError, setSaveError] = useState('')
   const [isPending, startTransition] = useTransition()
+  const materialMap = useMemo(() => new Map(materiales.map(material => [material.id, material])), [materiales])
 
   const costoMateriales = items.reduce((sum, item) => {
     if (item.materialId === '') return sum
-    const mat = materiales.find(m => m.id === item.materialId)
+    const mat = materialMap.get(item.materialId)
     return sum + (mat ? mat.precio * item.cantidad : 0)
   }, 0)
 
@@ -139,8 +135,9 @@ export default function CalculadoraClient({ materiales }: { materiales: Material
 
       if (fotos.length > 0) {
         const formData = new FormData()
+        const optimizedFotos = await optimizeImagesForUpload(fotos)
 
-        fotos.forEach(file => {
+        optimizedFotos.forEach(file => {
           formData.append('files', file)
         })
 
@@ -260,7 +257,7 @@ export default function CalculadoraClient({ materiales }: { materiales: Material
                     </td>
                   </tr>
                 ) : items.map((item, i) => {
-                  const mat = materiales.find(m => m.id === item.materialId)
+                  const mat = item.materialId === '' ? undefined : materialMap.get(item.materialId)
                   const subtotal = mat ? mat.precio * item.cantidad : 0
 
                   return (
@@ -297,10 +294,10 @@ export default function CalculadoraClient({ materiales }: { materiales: Material
                         </div>
                       </td>
                       <td className="hidden px-2 py-2 text-right font-mono text-xs text-gray-400 sm:table-cell">
-                        {mat ? fmoney(mat.precio) : '-'}
+                        {mat ? formatMoney(mat.precio) : '-'}
                       </td>
                       <td className="px-2 py-2 text-right font-mono text-sm font-semibold text-gray-900">
-                        {subtotal > 0 ? fmoney(subtotal) : '-'}
+                        {subtotal > 0 ? formatMoney(subtotal) : '-'}
                       </td>
                       <td className="py-2 pl-2">
                         <button
@@ -320,7 +317,7 @@ export default function CalculadoraClient({ materiales }: { materiales: Material
           <div className="mt-3 flex justify-end border-t border-gray-100 pt-3">
             <div className="text-right">
               <p className="text-xs uppercase tracking-wide text-gray-400">Total materiales</p>
-              <p className="text-2xl font-bold text-gray-900">{fmoney(costoMateriales)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatMoney(costoMateriales)}</p>
             </div>
           </div>
         </div>
@@ -373,7 +370,7 @@ export default function CalculadoraClient({ materiales }: { materiales: Material
           <div className="mt-3 flex justify-end border-t border-gray-100 pt-3">
             <div className="text-right">
               <p className="text-xs uppercase tracking-wide text-gray-400">Total adicionales</p>
-              <p className="text-2xl font-bold text-gray-900">{fmoney(costoMO + gastosGen)}</p>
+              <p className="text-2xl font-bold text-gray-900">{formatMoney(costoMO + gastosGen)}</p>
             </div>
           </div>
         </div>
@@ -411,9 +408,9 @@ export default function CalculadoraClient({ materiales }: { materiales: Material
 
           <div className="space-y-2 text-sm">
             {[
-              { label: 'Total materiales', value: fmoney(costoMateriales) },
-              { label: 'Mano de obra', value: fmoney(costoMO) },
-              { label: 'Gastos generales', value: fmoney(gastosGen) },
+              { label: 'Total materiales', value: formatMoney(costoMateriales) },
+              { label: 'Mano de obra', value: formatMoney(costoMO) },
+              { label: 'Gastos generales', value: formatMoney(gastosGen) },
             ].map(({ label, value }) => (
               <div key={label} className="flex items-center justify-between border-b border-gray-100 py-2">
                 <span className="text-gray-500">{label}</span>
@@ -422,11 +419,11 @@ export default function CalculadoraClient({ materiales }: { materiales: Material
             ))}
             <div className="flex items-center justify-between border-b-2 border-gray-200 py-2">
               <span className="font-bold text-gray-900">Costo total</span>
-              <span className="font-mono font-bold text-gray-900">{fmoney(costoTotal)}</span>
+              <span className="font-mono font-bold text-gray-900">{formatMoney(costoTotal)}</span>
             </div>
             <div className="flex items-center justify-between py-2">
               <span className="text-gray-500">Ganancia ({margen}%)</span>
-              <span className="font-mono font-semibold text-green-600">{fmoney(margenValor)}</span>
+              <span className="font-mono font-semibold text-green-600">{formatMoney(margenValor)}</span>
             </div>
           </div>
 
@@ -434,7 +431,7 @@ export default function CalculadoraClient({ materiales }: { materiales: Material
             <p className="mb-1 text-xs uppercase tracking-widest text-white/60">Producto</p>
             <p className="mb-3 truncate font-semibold text-white/90">{nombre || 'Mi producto'}</p>
             <p className="mb-1 text-xs uppercase tracking-widest text-white/60">Precio sugerido</p>
-            <p className="text-4xl font-extrabold tracking-tight">{fmoney(precioVenta)}</p>
+            <p className="text-4xl font-extrabold tracking-tight">{formatMoney(precioVenta)}</p>
           </div>
 
           {saveError && (

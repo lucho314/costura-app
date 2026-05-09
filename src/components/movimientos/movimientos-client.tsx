@@ -1,9 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import Toast from '@/components/ui/toast'
 import MovimientoForm from './movimiento-form'
 import { getMovimientosPage } from '@/lib/actions/movimientos'
+import { formatMoney, formatShortDateTime } from '@/lib/format'
 import type { MovimientoStock, Producto, EstadisticasMovimientos, TipoMovimiento } from '@/types'
 
 const PAGE_SIZE = 30
@@ -11,23 +12,6 @@ const PAGE_SIZE = 30
 interface ToastState {
   message: string
   type: 'success' | 'error'
-}
-
-function fmoney(n: number) {
-  return '$ ' + n.toLocaleString('es-AR', {
-    minimumFractionDigits: n % 1 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  })
-}
-
-function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
 }
 
 export default function MovimientosClient({
@@ -49,6 +33,7 @@ export default function MovimientosClient({
   const [modalOpen, setModalOpen] = useState(false)
   const [toast, setToast] = useState<ToastState | null>(null)
   const [, startTransition] = useTransition()
+  const deferredSearch = useDeferredValue(search)
 
   // Refs to avoid stale closures
   const tipoRef = useRef<TipoMovimiento | ''>('')
@@ -122,14 +107,15 @@ export default function MovimientosClient({
   }, [loadMore])
 
   // Client-side text filter on loaded items
-  const filtered = items.filter(m => {
-    if (!search) return true
-    const q = search.toLowerCase()
-    return (
+  const filtered = useMemo(() => {
+    if (!deferredSearch) return items
+    const q = deferredSearch.toLowerCase()
+
+    return items.filter(m => (
       m.producto?.nombre?.toLowerCase().includes(q) ||
       (m.notas ?? '').toLowerCase().includes(q)
-    )
-  })
+    ))
+  }, [items, deferredSearch])
 
   const hasMore = items.length < total
   const clearToast = useCallback(() => setToast(null), [])
@@ -200,7 +186,7 @@ export default function MovimientosClient({
             <div>
               <p className="text-xs uppercase tracking-wide text-gray-500">Ingresos</p>
               <p className="text-2xl font-extrabold text-gray-900">
-                {fmoney(estadisticas.totalIngresos)}
+                {formatMoney(estadisticas.totalIngresos)}
               </p>
             </div>
           </div>
@@ -216,7 +202,7 @@ export default function MovimientosClient({
             <div>
               <p className="text-xs uppercase tracking-wide text-gray-500">Ganancias</p>
               <p className="text-2xl font-extrabold text-gray-900">
-                {fmoney(estadisticas.totalGanancias)}
+                {formatMoney(estadisticas.totalGanancias)}
               </p>
             </div>
           </div>
@@ -241,7 +227,7 @@ export default function MovimientosClient({
                     <div className="mb-1 flex items-center justify-between text-sm">
                       <span className="font-medium text-gray-900">{item.nombre}</span>
                       <span className="font-mono text-gray-600">
-                        {item.cantidad_vendida} vendidas · {fmoney(item.ingresos)}
+                        {item.cantidad_vendida} vendidas · {formatMoney(item.ingresos)}
                       </span>
                     </div>
                     <div className="h-2 overflow-hidden rounded-full bg-gray-100">
@@ -314,7 +300,7 @@ export default function MovimientosClient({
                 ) : (
                   filtered.map(m => (
                     <tr key={m.id} className="transition-colors hover:bg-gray-50">
-                      <td className="px-4 py-3 text-gray-600">{formatDate(m.created_at)}</td>
+                      <td className="px-4 py-3 text-gray-600">{formatShortDateTime(m.created_at)}</td>
                       <td className="px-4 py-3 font-medium text-gray-900">
                         {m.producto?.nombre || 'Producto eliminado'}
                       </td>
@@ -340,9 +326,9 @@ export default function MovimientosClient({
                       <td className="px-4 py-3 text-right">
                         {m.tipo === 'venta' && m.precio_venta !== null ? (
                           <div>
-                            <div className="font-mono font-semibold text-gray-900">{fmoney(m.precio_venta)}</div>
+                            <div className="font-mono font-semibold text-gray-900">{formatMoney(m.precio_venta)}</div>
                             <div className={`text-xs font-mono ${(m.ganancia_real || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                              {fmoney(m.ganancia_real || 0)}
+                              {formatMoney(m.ganancia_real || 0)}
                             </div>
                           </div>
                         ) : (

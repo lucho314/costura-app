@@ -4,7 +4,6 @@ import { refresh, revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import type {
   RegistrarMovimientoInput,
-  MovimientosFiltros,
   MovimientoStock,
   EstadisticasMovimientos,
   TipoMovimiento,
@@ -116,7 +115,7 @@ export async function getMovimientosPage(
     .from('movimientos_stock')
     .select(`
       *,
-      producto:productos(id, nombre, precio_venta, costo_total, producto_imagenes(url, orden))
+      producto:productos(id, nombre, precio_venta, costo_total)
     `, { count: 'exact' })
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })

@@ -2,6 +2,7 @@
 
 import { useCallback, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { optimizeImagesForUpload } from '@/lib/image-optimizer'
 import Toast from '@/components/ui/toast'
 
 interface ToastState {
@@ -71,8 +72,9 @@ export default function ProductoImageUploader({
 
     startTransition(async () => {
       const formData = new FormData()
+      const optimizedFotos = await optimizeImagesForUpload(fotos)
 
-      fotos.forEach(file => {
+      optimizedFotos.forEach(file => {
         formData.append('files', file)
       })
 

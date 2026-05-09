@@ -1,16 +1,10 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 import Modal from '@/components/ui/modal'
 import { registrarMovimiento } from '@/lib/actions/movimientos'
+import { formatMoney } from '@/lib/format'
 import type { Producto, TipoMovimiento } from '@/types'
-
-function fmoney(n: number) {
-  return '$ ' + n.toLocaleString('es-AR', {
-    minimumFractionDigits: n % 1 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  })
-}
 
 export default function MovimientoForm({
   productos,
@@ -30,8 +24,9 @@ export default function MovimientoForm({
   const [notas, setNotas] = useState('')
   const [error, setError] = useState('')
   const [isPending, startTransition] = useTransition()
+  const productoMap = useMemo(() => new Map(productos.map(producto => [producto.id, producto])), [productos])
 
-  const productoSeleccionado = productoId === '' ? null : productos.find(p => p.id === productoId)
+  const productoSeleccionado = productoId === '' ? null : productoMap.get(productoId) ?? null
   const stockNuevo = productoSeleccionado ? (
     tipo === 'venta' ? productoSeleccionado.stock - cantidad :
     tipo === 'produccion' ? productoSeleccionado.stock + cantidad :
@@ -113,7 +108,7 @@ export default function MovimientoForm({
               const newProductoId = e.target.value === '' ? '' : Number(e.target.value)
               setProductoId(newProductoId)
               // Pre-llenar precio de venta con el precio sugerido
-              const producto = newProductoId === '' ? null : productos.find(p => p.id === newProductoId)
+              const producto = newProductoId === '' ? null : productoMap.get(newProductoId)
               if (producto && tipo === 'venta') {
                 setPrecioVenta(producto.precio_venta)
               }
@@ -207,7 +202,7 @@ export default function MovimientoForm({
               step="0.01"
               onChange={e => setPrecioVenta(e.target.value === '' ? '' : Number.parseFloat(e.target.value))}
               className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-300"
-              placeholder={productoSeleccionado ? fmoney(productoSeleccionado.precio_venta) : ''}
+              placeholder={productoSeleccionado ? formatMoney(productoSeleccionado.precio_venta) : ''}
             />
           </div>
         )}
@@ -243,17 +238,17 @@ export default function MovimientoForm({
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-gray-500">Ganancia real</span>
                     <span className={`font-mono font-semibold ${gananciaCalculada >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {fmoney(gananciaCalculada)}
+                      {formatMoney(gananciaCalculada)}
                     </span>
                   </div>
                   <div className="mt-1 flex items-center justify-between gap-3">
                     <span className="text-gray-500">Ganancia proyectada</span>
-                    <span className="font-mono text-gray-600">{fmoney(gananciaProyectada)}</span>
+                    <span className="font-mono text-gray-600">{formatMoney(gananciaProyectada)}</span>
                   </div>
                 </div>
                 {gananciaCalculada < gananciaProyectada && (
                   <div className="mt-2 rounded-lg bg-yellow-50 px-3 py-2 text-xs text-yellow-700">
-                    Estás vendiendo con descuento ({fmoney(gananciaProyectada - gananciaCalculada)} menos)
+                    Estás vendiendo con descuento ({formatMoney(gananciaProyectada - gananciaCalculada)} menos)
                   </div>
                 )}
               </>

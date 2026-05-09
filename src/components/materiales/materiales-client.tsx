@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import Modal from '@/components/ui/modal'
 import Toast from '@/components/ui/toast'
 import { createMaterial, deleteMaterial, getMaterialesPage, updateMaterial } from '@/lib/actions/materiales'
+import { formatMoney } from '@/lib/format'
 import type { Material, Proveedor } from '@/types'
 import { UNIDADES } from '@/types'
 
@@ -12,13 +13,6 @@ const PAGE_SIZE = 15
 interface ToastState {
   message: string
   type: 'success' | 'error'
-}
-
-function fmoney(n: number) {
-  return '$ ' + n.toLocaleString('es-AR', {
-    minimumFractionDigits: n % 1 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  })
 }
 
 export default function MaterialesClient({
@@ -281,7 +275,7 @@ export default function MaterialesClient({
                     <td className="px-4 py-3 font-medium text-gray-900">{m.nombre}</td>
                     <td className="px-4 py-3 text-gray-500">{m.proveedor?.nombre ?? 'Sin proveedor'}</td>
                     <td className="px-4 py-3 text-right font-mono font-semibold text-gray-900">
-                      {fmoney(m.precio)}
+                      {formatMoney(m.precio)}
                     </td>
                     <td className="px-4 py-3">
                       <span className="inline-block rounded-md bg-violet-50 px-2 py-0.5 text-xs font-mono font-semibold text-violet-700">

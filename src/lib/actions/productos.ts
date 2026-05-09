@@ -124,7 +124,7 @@ export async function getProductosPage(offset: number, limit: number, search?: s
     .select(`
       *,
       producto_imagenes (
-        id, producto_id, user_id, object_key, url, orden, alt, created_at
+        id, url, orden, alt
       )
     `, { count: 'exact' })
     .eq('user_id', user.id)
@@ -153,13 +153,9 @@ export async function getProductos(search?: string) {
       *,
       producto_imagenes (
         id,
-        producto_id,
-        user_id,
-        object_key,
         url,
         orden,
-        alt,
-        created_at
+        alt
       )
     `)
     .eq('user_id', user.id)

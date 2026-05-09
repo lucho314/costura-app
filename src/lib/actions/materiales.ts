@@ -37,7 +37,7 @@ export async function getMateriales() {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('materiales')
-    .select('*, proveedor:proveedores(id, user_id, nombre, created_at)')
+    .select('id, user_id, nombre, unidad, precio, proveedor_id, created_at')
     .order('nombre')
   if (error) throw new Error(error.message)
   return data
@@ -48,7 +48,7 @@ export async function getMaterialesPage(offset: number, limit: number, search?: 
 
   let query = supabase
     .from('materiales')
-    .select('*, proveedor:proveedores(id, user_id, nombre, created_at)', { count: 'exact' })
+    .select('id, user_id, nombre, unidad, precio, proveedor_id, created_at, proveedor:proveedores(id, user_id, nombre, created_at)', { count: 'exact' })
     .order('nombre')
     .range(offset, offset + limit - 1)
 
@@ -59,7 +59,7 @@ export async function getMaterialesPage(offset: number, limit: number, search?: 
   const { data, count, error } = await query
   if (error) throw new Error(error.message)
 
-  return { materiales: (data ?? []) as Material[], total: count ?? 0 }
+  return { materiales: (data ?? []) as unknown as Material[], total: count ?? 0 }
 }
 
 export async function createMaterial(formData: FormData) {
